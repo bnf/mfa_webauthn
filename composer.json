@@ -1,0 +1,27 @@
+{
+    "name": "bnf/mfa-webauthn",
+    "description": "TYPO3 MFA WebAuthn support for FIDO2 and U2F security tokens",
+    "type": "typo3-cms-extension",
+    "license": "GPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Benjamin Franzke",
+            "email": "benjaminfranzke@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.2",
+        "typo3/cms-core": "^11.1@dev",
+        "web-auth/webauthn-lib": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bnf\\MfaWebauthn\\": "Classes/"
+        }
+    },
+    "extra": {
+        "typo3/cms": {
+            "extension-key": "mfa_webauthn"
+        }
+    }
+}

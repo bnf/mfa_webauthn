@@ -1,0 +1,18 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+    public: false
+
+  Bnf\MfaWebauthn\:
+    resource: '../Classes/*'
+
+  Bnf\MfaWebauthn\Provider\WebAuthnProvider:
+    tags:
+      - name: mfa.provider
+        identifier: 'webauthn'
+        title: 'Security Tokens'
+        description: 'FIDO2/U2F security tokens'
+        icon: 'tx-mfawebauthn-key'
+        defaultProviderAllowed: true
+        before: 'recovery-codes,hotp,totp'
