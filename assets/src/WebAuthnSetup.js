@@ -24,7 +24,7 @@ export class MfaWebauthnSetup extends LitElement {
             ${Object.keys(this.credentials).length === 0 ?
                 html`<div class="callout"><h4 class="callout-title">No security keys added</h4><div class="callout-body">Configure security keys below</div></div>` :
                 html`
-                    <table class="table" style="max-width: 700px; word-break: break-all">
+                    <table class="table" style="max-width: 450px; word-break: break-all">
                         <thead>
                             <tr>
                                 <th class="col-icon">
