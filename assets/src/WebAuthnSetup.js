@@ -4,6 +4,7 @@ import {preparePublicKeyOptions, preparePublicKeyCredentials} from '@web-auth/we
 export class MfaWebauthnSetup extends LitElement {
     static get properties() {
         return {
+            mode: {type: String},
             credentials: {type: Object},
             credentialCreationOptions: {type: Object, attribute: 'credential-creation-options'},
             publicKeyCredential: {type: String, attribute: false},
@@ -83,10 +84,14 @@ export class MfaWebauthnSetup extends LitElement {
         }
 
         super.connectedCallback();
+
+        if (this.mode === 'setup') {
+            this._createCredentials();
+        }
     }
 
     _createCredentials(e) {
-        e.preventDefault();
+        e && e.preventDefault();
         const publicKey = preparePublicKeyOptions(JSON.parse(JSON.stringify(this.credentialCreationOptions)))
         this.loading = true;
         navigator.credentials.create({publicKey})

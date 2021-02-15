@@ -78,7 +78,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         switch ($type) {
             case MfaViewType::SETUP:
             case MfaViewType::EDIT:
-                $content = $this->prepareSetup($request, $propertyManager);
+                $content = $this->prepareSetup($request, $propertyManager, $type);
                 break;
             case MfaViewType::AUTH:
                 $content = $this->prepareAuth($request, $propertyManager);
@@ -234,7 +234,8 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
     protected function prepareSetup(
         ServerRequestInterface $request,
-        MfaProviderPropertyManager $propertyManager
+        MfaProviderPropertyManager $propertyManager,
+        string $type
     ): string {
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
 
@@ -274,6 +275,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         return $this->renderHtmlTag('mfa-webauthn-setup', [
             'credential-creation-options' => $creationOptions,
             'credentials' => $keys,
+            'mode' => $type,
             'locked' => $this->isLocked($propertyManager),
         ]);
     }
