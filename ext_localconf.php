@@ -8,3 +8,5 @@ defined('TYPO3_MODE') || die('Access denied.');
         \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
         ['source' => 'EXT:mfa_webauthn/Resources/Public/Icons/tx_mfawebauthn_key.svg']
     );
+
+$GLOBALS['TYPO3_CONF_VARS']['BE']['recommendedMfaProvider'] = 'webauthn';

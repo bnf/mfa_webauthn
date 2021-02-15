@@ -11,8 +11,9 @@ services:
     tags:
       - name: mfa.provider
         identifier: 'webauthn'
-        title: 'Security Tokens'
-        description: 'FIDO2/U2F security tokens'
+        title: 'Security Keys'
+        description: 'Security keys are hardware devices containing cryptographic keys. They can be used for two-factor authentication. Security keys must support the Webauthn standard by implemented FIDO2 or U2F interfaces.'
+        setupInstructions: 'Do you have your security key? To register a security key insert it into the USB port and press Next. When it starts flashing, press the gold disc on it.'
         icon: 'tx-mfawebauthn-key'
         defaultProviderAllowed: true
         before: 'recovery-codes,hotp,totp'

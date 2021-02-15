@@ -23,9 +23,9 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use TYPO3\CMS\Core\Authentication\Mfa\MfaContentType;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderInterface;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderPropertyManager;
+use TYPO3\CMS\Core\Authentication\Mfa\MfaViewType;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -69,18 +69,18 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         return false;
     }
 
-    public function renderContent(
+    public function handleRequest(
         ServerRequestInterface $request,
         MfaProviderPropertyManager $propertyManager,
         string $type
     ): ResponseInterface {
         $content = '';
         switch ($type) {
-            case MfaContentType::SETUP:
-            case MfaContentType::EDIT:
+            case MfaViewType::SETUP:
+            case MfaViewType::EDIT:
                 $content = $this->prepareSetup($request, $propertyManager);
                 break;
-            case MfaContentType::AUTH:
+            case MfaViewType::AUTH:
                 $content = $this->prepareAuth($request, $propertyManager);
                 break;
         }
