@@ -11,5 +11,8 @@ $EM_CONF[$_EXTKEY] = [
         'depends' => [
             'typo3' => '11.1.0-11.1.99',
         ],
+        'suggests' => [
+            'sf_yubikey' => '*',
+        ],
     ],
 ];
