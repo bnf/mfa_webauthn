@@ -27,6 +27,7 @@ use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderInterface;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderPropertyManager;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaViewType;
 use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
@@ -51,6 +52,20 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     ) {
         $this->responseFactory = $responseFactory;
         $this->context = $context;
+
+        if (!Environment::isComposerMode()) {
+            $functions = [
+                'beberlei/assert/lib/Assert/functions.php',
+                'ramsey/uuid/src/functions.php',
+                'thecodingmachine/safe/lib/special_cases.php',
+                'thecodingmachine/safe/generated/*.php',
+            ];
+            foreach ($functions as $glob) {
+                foreach (glob(__DIR__ . '/../../Resources/Private/Libraries/' . $glob) as $file) {
+                    require_once($file);
+                }
+            }
+        }
     }
 
     public function canProcess(ServerRequestInterface $request): bool

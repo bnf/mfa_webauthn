@@ -1,0 +1,18 @@
+{
+    "name": "bnf/mfa-webauthn-libraries-for-classic-mode",
+    "require": {
+        "web-auth/webauthn-lib": "^3.0"
+    },
+    "replace": {
+        "psr/http-client": "*",
+        "psr/http-factory": "*",
+        "psr/http-message": "*",
+        "psr/container": "*",
+        "psr/log": "*",
+        "symfony/polyfill-ctype": "*",
+        "symfony/polyfill-php80": "*"
+    },
+    "config": {
+        "vendor-dir": "."
+    }
+}

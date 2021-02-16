@@ -3,3 +3,5 @@
 /.editorconfig export-ignore
 /Makefile export-ignore
 /assets export-ignore
+/Resources/Private/Libraries/composer.json export-ignore
+/Resources/Private/Libraries/composer.lock export-ignore
