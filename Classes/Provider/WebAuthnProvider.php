@@ -45,13 +45,19 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
     private ResponseFactoryInterface $responseFactory;
     private Context $context;
+    private string $userVerification;
+    private ?string $authenticatorAttachment;
 
     public function __construct(
         ResponseFactoryInterface $responseFactory,
-        Context $context
+        Context $context,
+        string $userVerification = AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_DISCOURAGED,
+        ?string $authenticatorAttachment = AuthenticatorSelectionCriteria::AUTHENTICATOR_ATTACHMENT_NO_PREFERENCE
     ) {
         $this->responseFactory = $responseFactory;
         $this->context = $context;
+        $this->userVerification = $userVerification;
+        $this->authenticatorAttachment = $authenticatorAttachment;
 
         if (!Environment::isComposerMode()) {
             $functions = [
@@ -255,7 +261,8 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
 
         $authenticatorSelectionCriteria = new AuthenticatorSelectionCriteria();
-        $authenticatorSelectionCriteria->setUserVerification(AuthenticatorSelectionCriteria::RESIDENT_KEY_REQUIREMENT_DISCOURAGED);
+        $authenticatorSelectionCriteria->setUserVerification($this->userVerification);
+        $authenticatorSelectionCriteria->setAuthenticatorAttachment($this->authenticatorAttachment);
         $authenticatorSelectionCriteria->setRequireResidentKey(false);
 
         $userEntity = $this->createUserEntity($propertyManager);
@@ -285,12 +292,27 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $keys = $propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY) ?? [];
 
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthn');
+        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthnV2');
+
+        $labels = [
+            'singular' => 'security key',
+            'plural' => 'security keys',
+            'defaultName' => 'My Security Token',
+        ];
+
+        if ($this->authenticatorAttachment === AuthenticatorSelectionCriteria::AUTHENTICATOR_ATTACHMENT_PLATFORM) {
+            $labels = [
+                'singular' => 'authenticator',
+                'plural' => 'authenticators',
+                'defaultName' => 'My Fingerprint',
+            ];
+        }
 
         return $this->renderHtmlTag('mfa-webauthn-setup', [
             'credential-creation-options' => $creationOptions,
             'credentials' => $keys,
             'mode' => $type,
+            'labels' => $labels,
             'locked' => $this->isLocked($propertyManager),
         ]);
     }
@@ -312,7 +334,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
         // We generate the set of options.
         $publicKeyCredentialRequestOptions = $webauthn->generatePublicKeyCredentialRequestOptions(
-            PublicKeyCredentialRequestOptions::USER_VERIFICATION_REQUIREMENT_DISCOURAGED,
+            $this->userVerification,
             $allowedCredentials
         );
 
@@ -322,7 +344,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
         // @todo: Detect FE
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthn');
+        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthnV2');
 
         return $this->renderHtmlTag('mfa-webauthn-authenticator', [
             'credential-request-options' => $publicKeyCredentialRequestOptions,

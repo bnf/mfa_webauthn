@@ -7,6 +7,7 @@ export class MfaWebauthnSetup extends LitElement {
             mode: {type: String},
             credentials: {type: Object},
             credentialCreationOptions: {type: Object, attribute: 'credential-creation-options'},
+            labels: {type: Object},
             publicKeyCredential: {type: String, attribute: false},
             publicKeyDescription: {type: String, attribute: false},
             action: {type: String, attribute: false},
@@ -22,7 +23,7 @@ export class MfaWebauthnSetup extends LitElement {
             <input type="hidden" name="webauthn_action" .value="${this.action}">
 
             ${Object.keys(this.credentials).length === 0 ?
-                html`<div class="callout"><h4 class="callout-title">No security keys added</h4><div class="callout-body">Configure security keys below</div></div>` :
+                html`<div class="callout"><h4 class="callout-title">No ${this.labels.plural} added</h4><div class="callout-body">Configure ${this.labels.plural} below</div></div>` :
                 html`
                     <table class="table" style="max-width: 450px; word-break: break-all">
                         <thead>
@@ -32,7 +33,7 @@ export class MfaWebauthnSetup extends LitElement {
                                         <i class="fa ${addIcon} fa-fw"></i>
                                     </button>
                                 </th>
-                                <th colspan="2">Registered Security Keys</th>
+                                <th colspan="2">Registered ${this.labels.plural}</th>
                             <tr>
                         </thead>
                         <tbody>
@@ -49,7 +50,7 @@ export class MfaWebauthnSetup extends LitElement {
                                     </td>
                                     <td class="col-control">
                                         <div class="btn-group" role="group">
-                                            <button class="btn btn-danger" title="Remove key"
+                                            <button class="btn btn-danger" title="Remove ${this.labels.singular}"
                                                 @click="${(e) => this._removeCredentials(e, prop)}">
                                                 <i class="fa fa-trash fa-fw"></i>
                                             </button>
@@ -64,7 +65,7 @@ export class MfaWebauthnSetup extends LitElement {
 
             <button class="btn btn-default btn-lg" @click="${this._createCredentials}">
                 <i class="fa ${addIcon} fa-fw"></i>
-                Add security key
+                Add ${this.labels.singular}
             </button>
         `;
     }
@@ -98,7 +99,7 @@ export class MfaWebauthnSetup extends LitElement {
             .then(data => {
                 this.action = 'add';
                 this.publicKeyCredential = JSON.stringify(preparePublicKeyCredentials(data));
-		const description = window.prompt('Please provide a name for this security key.', 'My FIDO2 token');
+		const description = window.prompt('Please provide a name for this ' + this.labels.signular + '.', this.labels.defaultName);
                 this.publicKeyDescription = description;
                 this.loading = false;
                 this.updateComplete.then(() => this.form.requestSubmit());
@@ -114,7 +115,7 @@ export class MfaWebauthnSetup extends LitElement {
         e.preventDefault();
         this.action = 'remove';
         const description = this.credentials[property].description || '(unnamed)';
-        if (!window.confirm('Do you really want to delete the key "' + description + '"?')) {
+        if (!window.confirm('Do you really want to delete the ' + this.labels.singular + ' "' + description + '"?')) {
             return;
         }
         this.publicKeyCredential = JSON.stringify(this.credentials[property].publickey);

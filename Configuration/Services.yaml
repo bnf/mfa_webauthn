@@ -7,7 +7,11 @@ services:
   Bnf\MfaWebauthn\:
     resource: '../Classes/*'
 
-  Bnf\MfaWebauthn\Provider\WebAuthnProvider:
+  mfa.webauthn.token.provider:
+    class: Bnf\MfaWebauthn\Provider\WebAuthnProvider
+    arguments:
+      $userVerification: !php/const Webauthn\AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_DISCOURAGED
+      $authenticatorAttachment: !php/const Webauthn\AuthenticatorSelectionCriteria::AUTHENTICATOR_ATTACHMENT_CROSS_PLATFORM
     tags:
       - name: mfa.provider
         identifier: 'webauthn'
@@ -17,3 +21,18 @@ services:
         icon: 'tx-mfawebauthn-key'
         defaultProviderAllowed: true
         before: 'recovery-codes,hotp,totp'
+
+  mfa.webauthn.platform.provider:
+    class: Bnf\MfaWebauthn\Provider\WebAuthnProvider
+    arguments:
+      $userVerification: !php/const Webauthn\AuthenticatorSelectionCriteria::USER_VERIFICATION_REQUIREMENT_PREFERRED
+      $authenticatorAttachment: !php/const Webauthn\AuthenticatorSelectionCriteria::AUTHENTICATOR_ATTACHMENT_PLATFORM
+    tags:
+      - name: mfa.provider
+        identifier: 'webauthn-platform'
+        title: 'Built-in Authenticators'
+        description: 'Internal authenticators are second factors built into notebooks or mobile phones via a trusted platform module and a fingerprint sensor.'
+        icon: 'tx-mfawebauthn-fingerprint'
+        defaultProviderAllowed: true
+        before: 'recovery-codes,hotp,totp'
+        after: 'webauthn'
