@@ -6,7 +6,7 @@ defined('TYPO3_MODE') || die('Access denied.');
     ->registerIcon(
         'tx-mfawebauthn-key',
         \TYPO3\CMS\Core\Imaging\IconProvider\SvgIconProvider::class,
-        ['source' => 'EXT:mfa_webauthn/Resources/Public/Icons/key.svg']
+        ['source' => 'EXT:mfa_webauthn/Resources/Public/Icons/security-token.svg']
     );
 
 \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Core\Imaging\IconRegistry::class)
