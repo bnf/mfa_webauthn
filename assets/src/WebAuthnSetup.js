@@ -52,9 +52,9 @@ export class MfaWebauthnSetup extends LitElement {
                                     </td>
                                     <td class="col-control">
                                         <div class="btn-group" role="group">
-                                            <button class="btn btn-danger" title="Remove ${this.labels.singular}"
+                                            <button class="btn btn-link" title="Remove ${this.labels.singular}"
                                                 @click="${(e) => this._removeCredentials(e, prop)}">
-                                                <i class="fa fa-trash fa-fw"></i>
+                                                ${this._getIcon('trash')}
                                             </button>
                                         </div>
                                     </td>
@@ -146,6 +146,9 @@ export class MfaWebauthnSetup extends LitElement {
         }
         if (name === 'computer') {
             return html`<svg viewBox="0 0 24 24" fill="#999" width="32" height="32"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>`;
+        }
+        if (name === 'trash') {
+            return html`<svg viewBox="0 0 24 24" fill="currentColor" fill-opacity=".8" width="24" height="24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
         }
         return html`<svg width="32" height="48" viewBox="4 0 16 24" fill="#999"><path d="M8 1c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h1v5h6v-5h1c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2H8zm4 4.416l3 1.334v2c0 1.85-1.28 3.58-3 4-1.72-.42-3-2.15-3-4v-2l3-1.334zm0 .73L9.666 7.184V9.08c.177 1.373 1.094 2.597 2.334 2.98V6.147z"/></svg>`;
     }
