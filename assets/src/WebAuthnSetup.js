@@ -10,6 +10,7 @@ export class MfaWebauthnSetup extends LitElement {
             labels: {type: Object},
             publicKeyCredential: {type: String, attribute: false},
             publicKeyDescription: {type: String, attribute: false},
+            publicKeyIcon: {type: String, attribute: false},
             action: {type: String, attribute: false},
             loading: {type: Boolean, attribute: false}
         };
@@ -20,6 +21,7 @@ export class MfaWebauthnSetup extends LitElement {
         return html`
             <input type="hidden" name="webauthn_publicKeyCredential" .value="${this.publicKeyCredential}">
             <input type="hidden" name="webauthn_publicKeyDescription" .value="${this.publicKeyDescription}">
+            <input type="hidden" name="webauthn_publicKeyIcon" .value="${this.publicKeyIcon}">
             <input type="hidden" name="webauthn_action" .value="${this.action}">
 
             ${Object.keys(this.credentials).length === 0 ?
@@ -40,7 +42,7 @@ export class MfaWebauthnSetup extends LitElement {
                             ${Object.keys(this.credentials).map((prop) => html`
                                 <tr id="credential-${prop}">
                                     <td class="col-icon">
-                                        <svg width="16" height="37.66" viewBox="0 0 48 113"><path d="M24.53 59.303c6.764.01 12.255-5.488 12.266-12.282.011-6.793-5.463-12.31-12.226-12.32-6.763-.01-12.255 5.488-12.265 12.281-.012 6.793 5.463 12.31 12.226 12.32zm.085-52.347c-2.959-.005-5.36 2.4-5.366 5.371-.004 2.972 2.39 5.384 5.348 5.39 2.958.004 5.36-2.4 5.365-5.372.005-2.972-2.39-5.385-5.347-5.39zM.129 2.6A2.607 2.607 0 012.727 0L45.41.069A2.607 2.607 0 0148 2.679l-.13 80.894a2.607 2.607 0 01-2.597 2.602l-5.2-.01-.038 24.234A2.6 2.6 0 0137.437 113l-27.097-.044a2.6 2.6 0 01-2.59-2.61l.039-24.232-5.2-.008A2.607 2.607 0 010 83.496L.13 2.601z" fill="#000" fill-opacity=".4"/>
+                                        ${this._getIcon(this.credentials[prop].icon || 'key')}
                                     </td>
 
                                     <td class="col-title">
@@ -99,7 +101,14 @@ export class MfaWebauthnSetup extends LitElement {
             .then(data => {
                 this.action = 'add';
                 this.publicKeyCredential = JSON.stringify(preparePublicKeyCredentials(data));
-		const description = window.prompt('Please provide a name for this ' + this.labels.signular + '.', this.labels.defaultName);
+                this.publicKeyIcon = 'key';
+                let defaultName = this.labels.defaultName;
+                if (this.credentialCreationOptions.authenticatorSelection.authenticatorAttachment === 'platform') {
+                    const isMobile = (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+                    defaultName = 'My ' + (isMobile ? 'Phone' : 'Computer');
+                    this.publicKeyIcon = isMobile ? 'mobile' : 'computer';
+                }
+                const description = window.prompt('Please provide a name for this ' + this.labels.signular + '.', defaultName);
                 this.publicKeyDescription = description;
                 this.loading = false;
                 this.updateComplete.then(() => this.form.requestSubmit());
@@ -129,6 +138,20 @@ export class MfaWebauthnSetup extends LitElement {
         const date = new Date(timestamp * 1000);
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         return date.toLocaleDateString('en-US', options) + ' ' + date.toLocaleTimeString('en-US');
+    }
+
+    _getIcon(name) {
+        name = name;
+
+        if (name === 'mobile') {
+            return html`<svg viewBox="0 0 24 24" fill="#000" width="24" height="24"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>`;
+
+        }
+        if (name === 'computer') {
+            return html`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#000" width="24" height="24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>`;
+        }
+
+        return html`<svg width="16" height="37.66" viewBox="0 0 48 113"><path d="M24.53 59.303c6.764.01 12.255-5.488 12.266-12.282.011-6.793-5.463-12.31-12.226-12.32-6.763-.01-12.255 5.488-12.265 12.281-.012 6.793 5.463 12.31 12.226 12.32zm.085-52.347c-2.959-.005-5.36 2.4-5.366 5.371-.004 2.972 2.39 5.384 5.348 5.39 2.958.004 5.36-2.4 5.365-5.372.005-2.972-2.39-5.385-5.347-5.39zM.129 2.6A2.607 2.607 0 012.727 0L45.41.069A2.607 2.607 0 0148 2.679l-.13 80.894a2.607 2.607 0 01-2.597 2.602l-5.2-.01-.038 24.234A2.6 2.6 0 0137.437 113l-27.097-.044a2.6 2.6 0 01-2.59-2.61l.039-24.232-5.2-.008A2.607 2.607 0 010 83.496L.13 2.601z" fill="#000" fill-opacity=".4"/></svg>`;
     }
 }
 

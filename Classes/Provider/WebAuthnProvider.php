@@ -168,6 +168,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $data = $this->getPublicKey($request);
         $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
         $keyDescription = $this->getDescription($request);
+        $keyIcon = $this->getIcon($request);
 
         $creationOptions = PublicKeyCredentialCreationOptions::createFromArray(
             $propertyManager->getProperty('creationOptions')
@@ -181,7 +182,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
                 $creationOptions, // This one contains the challenge we stored during the previous step
                 $request
             );
-            $publicKeyCredentialSourceRepository->addCredentialSource($publicKeyCredentialSource, $keyDescription);
+            $publicKeyCredentialSourceRepository->addCredentialSource($publicKeyCredentialSource, $keyDescription, $keyIcon);
 
         } catch (\Throwable $exception) {
             return false;
@@ -292,7 +293,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $keys = $propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY) ?? [];
 
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthnV2');
+        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthnV3');
 
         $labels = [
             'singular' => 'security key',
@@ -344,7 +345,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
         // @todo: Detect FE
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthnV2');
+        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthnV3');
 
         return $this->renderHtmlTag('mfa-webauthn-authenticator', [
             'credential-request-options' => $publicKeyCredentialRequestOptions,
@@ -365,6 +366,11 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     private function getDescription(ServerRequestInterface $request): string
     {
         return trim((string)($request->getQueryParams()['webauthn_publicKeyDescription'] ?? $request->getParsedBody()['webauthn_publicKeyDescription'] ?? ''));
+    }
+
+    private function getIcon(ServerRequestInterface $request): string
+    {
+        return trim((string)($request->getQueryParams()['webauthn_publicKeyIcon'] ?? $request->getParsedBody()['webauthn_publicKeyIcon'] ?? ''));
     }
 
     private function createUserEntity(MfaProviderPropertyManager $propertyManager): PublicKeyCredentialUserEntity

@@ -73,13 +73,14 @@ class PublicKeyCredentialSourceRepository implements PublicKeyCredentialSourceRe
         $this->save($data);
     }
 
-    public function addCredentialSource(PublicKeyCredentialSource $publicKeyCredentialSource, string $description): void
+    public function addCredentialSource(PublicKeyCredentialSource $publicKeyCredentialSource, string $description, string $icon): void
     {
         $identifier = base64_encode($publicKeyCredentialSource->getPublicKeyCredentialId());
 
         $source = [];
         $source['publickey'] = $publicKeyCredentialSource->jsonSerialize();
         $source['description'] = $description;
+        $source['icon'] = $icon;
         $source['created'] = GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('date', 'timestamp');
 
         $data = $this->load();
