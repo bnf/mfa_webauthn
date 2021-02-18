@@ -225,10 +225,6 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             $propertyManager->getProperty('lastRequest')
         );
 
-        $propertyManager->updateProperties([
-            'lastRequest' => $publicKeyCredentialRequestOptions
-        ]);
-
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
 
         try {
