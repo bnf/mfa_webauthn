@@ -25,7 +25,7 @@ export class MfaWebauthnSetup extends LitElement {
             <input type="hidden" name="webauthn_action" .value="${this.action}">
 
             ${Object.keys(this.credentials).length === 0 ?
-                html`<div class="callout"><h4 class="callout-title">No ${this.labels.plural} added</h4><div class="callout-body">Configure ${this.labels.plural} below</div></div>` :
+                html`<div class="callout" style="margin-top:0"><h4 class="callout-title">No ${this.labels.plural} added</h4><div class="callout-body">Configure ${this.labels.plural} below</div></div>` :
                 html`
                     <table class="table" style="max-width: 450px; word-break: break-all">
                         <thead>
