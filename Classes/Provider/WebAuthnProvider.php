@@ -153,14 +153,22 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         }
 
         $action = $this->getAction($request);
+        $status = true;
         if ($action === 'add') {
-            return $this->addCredentials($request, $propertyManager);
+            $status = $this->addCredentials($request, $propertyManager);
         }
         if ($action === 'remove') {
-            return $this->removeCredentials($request, $propertyManager);
+            $status = $this->removeCredentials($request, $propertyManager);
         }
 
-        return true;
+        if (!$this->isActive($propertyManager)) {
+            // Delete the provider entry (for security reasons) when we gone inactive due to the update
+            if (!$propertyManager->deleteProviderEntry()) {
+                $status = false;
+            }
+        }
+
+        return $status;
     }
 
     private function addCredentials(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): bool
