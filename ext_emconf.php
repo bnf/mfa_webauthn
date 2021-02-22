@@ -1,7 +1,7 @@
 <?php
 
 $EM_CONF[$_EXTKEY] = [
-    'title' => 'MFA Security Tokens',
+    'title' => 'MFA WebAuthn Provider (FIDO2/U2F)',
     'description' => 'WebAuthn Provider for TYPO3 Multi Factor Authentication',
     'state' => 'beta',
     'author' => 'Benjamin Franzke',
