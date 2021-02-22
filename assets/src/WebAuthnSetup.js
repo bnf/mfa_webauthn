@@ -150,7 +150,7 @@ export class MfaWebauthnSetup extends LitElement {
         if (name === 'trash') {
             return html`<svg viewBox="0 0 24 24" fill="currentColor" fill-opacity=".8" width="24" height="24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12l1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"/></svg>`;
         }
-        return html`<svg width="32" height="48" viewBox="4 0 16 24" fill="#999"><path d="M8 1c-1.1 0-2 .9-2 2v13c0 1.1.9 2 2 2h1v5h6v-5h1c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2H8zm4 4.416l3 1.334v2c0 1.85-1.28 3.58-3 4-1.72-.42-3-2.15-3-4v-2l3-1.334zm0 .73L9.666 7.184V9.08c.177 1.373 1.094 2.597 2.334 2.98V6.147z"/></svg>`;
+        return html`<svg width="32" height="48" viewBox="4 0 16 24" fill="#777"><path d="M8 1c-1.1 0-2 .9-2 2v12.5c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2zm4 4.416l3 1.334v2c0 1.85-1.28 3.58-3 4-1.72-.42-3-2.15-3-4v-2zm0 .73L9.666 7.184V9.08c.177 1.373 1.094 2.597 2.334 2.98V6.147zM9 18v5h6v-5z"/></svg>`;
     }
 }
 
