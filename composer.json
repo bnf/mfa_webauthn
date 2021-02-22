@@ -1,6 +1,6 @@
 {
     "name": "bnf/mfa-webauthn",
-    "description": "TYPO3 MFA WebAuthn support for FIDO2 and U2F security tokens",
+    "description": "WebAuthn Provider for TYPO3 Multi Factor Authentication",
     "type": "typo3-cms-extension",
     "license": "GPL-3.0-or-later",
     "authors": [
