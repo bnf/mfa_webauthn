@@ -7,7 +7,7 @@ export default {
     input: 'src/index.js',
     output: [
         {
-            file: '../Resources/Public/JavaScript/MfaWebAuthnV4.js',
+            file: '../Resources/Public/JavaScript/MfaWebAuthn.js',
             format: 'amd',
             name: 'webauthn',
             plugins: [terser()]

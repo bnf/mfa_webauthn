@@ -289,7 +289,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $keys = $propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY) ?? [];
 
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthnV4');
+        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthn');
 
         $labels = [
             'singular' => 'security key',
@@ -341,7 +341,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
         // @todo: Detect FE
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthnV4');
+        $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthn');
 
         return $this->renderHtmlTag('mfa-webauthn-authenticator', [
             'credential-request-options' => $publicKeyCredentialRequestOptions,
