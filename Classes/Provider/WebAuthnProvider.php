@@ -313,13 +313,17 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             ];
         }
 
-        return $this->renderHtmlTag('mfa-webauthn-setup', [
-            'credential-creation-options' => $creationOptions,
-            'credentials' => $keys,
-            'mode' => $type,
-            'labels' => $labels,
-            'locked' => $this->isLocked($propertyManager),
-        ]);
+        return $this->renderHtmlTag(
+            'mfa-webauthn-setup',
+            [
+                'credential-creation-options' => $creationOptions,
+                'credentials' => $keys,
+                'mode' => $type,
+                'labels' => $labels,
+                'locked' => $this->isLocked($propertyManager),
+            ],
+            $this->renderHtmlTag('i', ['class' => "fa fa-circle-o-notch fa-spin fa-3x fa-fw"])
+        );
     }
 
     private function prepareAuth(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): string
