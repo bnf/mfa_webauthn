@@ -32,6 +32,6 @@ This puts the following limitations on usages of this provider:
 
 If the restriction to one backend domain is too limiting, consider using [mfa_yubikey](https://github.com/derhansen/mfa_yubikey)
  or [mfa_hotp](https://github.com/o-ba/mfa_hotp) instead. Note, both providers are less secure than webauthn, as the user
-user can be spoofed with a faked domain name, but they are more flexible and both allow to use hardware tokens with a multi
+can be spoofed with a faked domain name, but they are more flexible and both allow to use hardware tokens with a multi
 domain setup.
 (`mfa_hotp` is intended for software HOTP authenticators, but the HOTP secret can also be burned to cheap HOTP hardware tokens.)
