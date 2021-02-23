@@ -1,7 +1,7 @@
 COMPOSER_EXECUTABLE=composer
 
 build:
-	cd assets && npm ci && npm run rollup
+	cd build && npm ci && npm run rollup
 
 prepare-classic-extension:
 	rm -rf Resources/Private/Libraries/*/
