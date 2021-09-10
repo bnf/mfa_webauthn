@@ -25,7 +25,7 @@ This puts the following limitations on usages of this provider:
  * Requires HTTPS or a localhost environment
    (therefore use `http://{myproject}.localhost` as local development URL)
  * Works only for one domain, multi domain sites need to have TYPO3 backend redirected to exactly
-   one domain, or should use alternative provider.
+   one domain, or should use alternative MFA MFA providers.
 
 
 ## Alternative Extensions
