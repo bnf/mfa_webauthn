@@ -20,5 +20,5 @@ export default {
         }),
         minifyHTML(),
     ],
-    external: [ 'lit-html', 'lit-element' ],
+    external: [ 'lit' ],
 }

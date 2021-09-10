@@ -1,4 +1,4 @@
-import { LitElement, html } from 'lit-element';
+import { LitElement, html } from 'lit';
 import {preparePublicKeyOptions, preparePublicKeyCredentials} from '@web-auth/webauthn-helper/src/common.js';
 
 export class MfaWebauthnSetup extends LitElement {
