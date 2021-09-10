@@ -1,6 +1,7 @@
 {
   "private": true,
   "main": "src/index.js",
+  "type": "module",
   "scripts": {
     "rollup": "rollup -c"
   },
