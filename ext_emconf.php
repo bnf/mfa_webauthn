@@ -10,7 +10,7 @@ $EM_CONF[$_EXTKEY] = [
     'clearCacheOnLoad' => true,
     'constraints' => [
         'depends' => [
-            'typo3' => '11.2.0-11.4.99',
+            'typo3' => '11.2.0-11.5.99',
         ],
         'suggests' => [
             'sf_yubikey' => '*',
