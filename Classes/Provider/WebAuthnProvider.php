@@ -117,9 +117,9 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             return false;
         }
 
-        // @todo: not really needed for webauthn
 
         // Reset the attempts
+        // Note, this is just for statistics, it is not needed for webauthn, as it will not lock
         return $propertyManager->updateProperties(['attempts' => 0]);
     }
 
@@ -129,8 +129,6 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             // Return since this provider is not activated
             return false;
         }
-
-        // @todo Should this also delete a possible recovery codes entry?
 
         // Delete the provider entry
         return $propertyManager->deleteProviderEntry();

@@ -115,7 +115,6 @@ export class MfaWebauthnSetup extends LitElement {
             }, error => {
                 this.loading = false;
                 // User probably aborted or timeout reached
-                // @todo: offer retry?/show notice?
                 console.log(error);
             });
     }
