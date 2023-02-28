@@ -11,6 +11,10 @@ second factor during authentication.
 composer require bnf/mfa-webauthn
 ```
 
+## Requirements
+
+The php extension bcmath or gmp must be available.
+
 ## Prerequisites and Limitations
 
 The WebAuthn API has some design-driven limitations.
