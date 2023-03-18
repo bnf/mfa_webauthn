@@ -29,6 +29,7 @@ use TYPO3\CMS\Core\Authentication\Mfa\MfaViewType;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Information\Typo3Version;
+use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
@@ -68,7 +69,11 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
                 'thecodingmachine/safe/generated/*.php',
             ];
             foreach ($functions as $glob) {
-                foreach (glob(__DIR__ . '/../../Resources/Private/Libraries/' . $glob) as $file) {
+                $files = glob(__DIR__ . '/../../Resources/Private/Libraries/' . $glob);
+                if ($files === false) {
+                    throw new \Exception('classic-mode composer-dependencies in EXT:mfa_webauth/Resources/Private/Libraries as missing', 1679121183);
+                }
+                foreach ($files as $file) {
                     require_once($file);
                 }
             }
@@ -405,7 +410,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         MfaProviderPropertyManager $propertyManager
     ): Server {
         $name = 'TYPO3 Backend';
-        $id = $request->getAttribute('normalizedParams')->getRequestHostOnly();
+        $id = $this->getNormalizedParams($request)->getRequestHostOnly();
 
         $server = new Server(
             new PublicKeyCredentialRpEntity($name, $id),
@@ -422,7 +427,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         return $server;
     }
 
-    private function renderHtmlTag(string $tagName, $attributes = [], string $content = ''): string
+    private function renderHtmlTag(string $tagName, array $attributes = [], string $content = ''): string
     {
         $unescaped = [];
         foreach ($attributes as $name => $value) {
@@ -432,5 +437,14 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             $unescaped[$name] = $value;
         }
         return '<' . $tagName . ' ' . GeneralUtility::implodeAttributes($unescaped, true) . '>' . $content . '</' . $tagName . '>';
+    }
+
+    private function getNormalizedParams(ServerRequestInterface $request): NormalizedParams
+    {
+        $normalizedParams = $request->getAttribute('normalizedParams');
+        if (!$normalizedParams instanceof NormalizedParams) {
+            throw new \InvalidArgumentException('request does not contain normalizedParams attribute', 1679120978);
+        }
+        return $normalizedParams;
     }
 }
