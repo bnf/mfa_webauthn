@@ -1,5 +1,5 @@
 import { LitElement, html } from 'lit';
-import {preparePublicKeyOptions, preparePublicKeyCredentials} from '@web-auth/webauthn-helper/src/common.js';
+import {startRegistration} from '@simplewebauthn/browser';
 
 export class MfaWebauthnSetup extends LitElement {
     static get properties() {
@@ -95,12 +95,12 @@ export class MfaWebauthnSetup extends LitElement {
 
     _createCredentials(e) {
         e && e.preventDefault();
-        const publicKey = preparePublicKeyOptions(JSON.parse(JSON.stringify(this.credentialCreationOptions)))
+        const credentialCreationOptions = JSON.parse(JSON.stringify(this.credentialCreationOptions));
         this.loading = true;
-        navigator.credentials.create({publicKey})
+        startRegistration(credentialCreationOptions)
             .then(data => {
                 this.action = 'add';
-                this.publicKeyCredential = JSON.stringify(preparePublicKeyCredentials(data));
+                this.publicKeyCredential = JSON.stringify(data);
                 this.publicKeyIcon = 'key';
                 let defaultName = this.labels.defaultName;
                 if (this.credentialCreationOptions.authenticatorSelection.authenticatorAttachment === 'platform') {

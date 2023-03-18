@@ -1,4 +1,4 @@
-import {preparePublicKeyOptions, preparePublicKeyCredentials} from '@web-auth/webauthn-helper/src/common.js';
+import {startAuthentication} from '@simplewebauthn/browser';
 
 export class MfaWebauthnAuthenticator extends HTMLElement {
     connectedCallback() {
@@ -12,10 +12,6 @@ export class MfaWebauthnAuthenticator extends HTMLElement {
             form = form.parentElement;
         }
 
-        const credentialRequestOptions = preparePublicKeyOptions(
-            JSON.parse(this.getAttribute('credential-request-options'))
-        );
-
         // Add generic submit listener, allowing the
         // user to (re)trigger verification using the
         // `verify` button
@@ -25,9 +21,10 @@ export class MfaWebauthnAuthenticator extends HTMLElement {
             }
             e.preventDefault();
 
-            navigator.credentials.get({publicKey: credentialRequestOptions})
+            const options = JSON.parse(this.getAttribute('credential-request-options'));
+            startAuthentication(options)
                 .then(data => {
-                    input.value = JSON.stringify(preparePublicKeyCredentials(data));
+                    input.value = JSON.stringify(data);
                     form.requestSubmit();
                 }, error => {
                     console.log(error);

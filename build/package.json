@@ -6,7 +6,7 @@
     "rollup": "rollup -c"
   },
   "dependencies": {
-    "@web-auth/webauthn-helper": "0.0.13"
+    "@simplewebauthn/browser": "^7.2.0"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^11.2.0",
