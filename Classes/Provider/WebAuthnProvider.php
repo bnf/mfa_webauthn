@@ -185,6 +185,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $creationOptions = PublicKeyCredentialCreationOptions::createFromArray(
             $propertyManager->getProperty('creationOptions')
         );
+        $hostname = $this->getNormalizedParams($request)->getRequestHostOnly();
 
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
 
@@ -192,7 +193,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             $publicKeyCredentialSource = $webauthn->loadAndCheckAttestationResponse(
                 $data,
                 $creationOptions, // This one contains the challenge we stored during the previous step
-                $request
+                $hostname
             );
             $publicKeyCredentialSourceRepository->addCredentialSource($publicKeyCredentialSource, $keyDescription, $keyIcon);
 
@@ -238,13 +239,14 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         );
 
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $hostname = $this->getNormalizedParams($request)->getRequestHostOnly();
 
         try {
             $publicKeyCredentialSource = $webauthn->loadAndCheckAssertionResponse(
                 $publicKey,
                 $publicKeyCredentialRequestOptions, // The options stored during the previous (prepareAuth) step
                 $userEntity,
-                $request
+                $hostname
             );
             $verified = true;
         } catch (\Throwable $e) {
