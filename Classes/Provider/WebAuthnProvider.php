@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace Bnf\MfaWebauthn\Provider;
 
 use Bnf\MfaWebauthn\Repository\PublicKeyCredentialSourceRepository;
+use Bnf\MfaWebauthn\Server;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Http\Message\ResponseInterface;
@@ -39,7 +40,6 @@ use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
 use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
-use Webauthn\Server;
 
 class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 {
@@ -416,7 +416,9 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             new PublicKeyCredentialRpEntity($name, $id),
             new PublicKeyCredentialSourceRepository($propertyManager)
         );
-        $server->setLogger($this->logger);
+        if ($this->logger !== null) {
+            $server->setLogger($this->logger);
+        }
 
         if (preg_match('/^(.+\.)?localhost$/', $id)) {
             // Marks 'localhost' and *.localhost as secure
