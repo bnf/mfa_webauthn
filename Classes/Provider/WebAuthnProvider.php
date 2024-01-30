@@ -99,7 +99,6 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     public function handleRequest(
         ServerRequestInterface $request,
         MfaProviderPropertyManager $propertyManager,
-        // MfaViewType for TYPO3 v13, string for v12/v11
         MfaViewType|string $type
     ): ResponseInterface {
         $content = '';
@@ -268,7 +267,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     protected function prepareSetup(
         ServerRequestInterface $request,
         MfaProviderPropertyManager $propertyManager,
-        string $type
+        MfaViewType|string $type
     ): string {
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
 
