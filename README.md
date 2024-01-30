@@ -1,12 +1,9 @@
 # WebAuthn Provider for TYPO3 Multi Factor Authentication
 
-This TYPO3 extension integrates into the experimental TYPO3 v11.1 Multi Factor Authentication (MFA) API,
+This TYPO3 extension integrates into the TYPO3 Multi Factor Authentication (MFA) API,
 adding authenticators using the [WebAuthn standard](https://webauthn.io). It provides support for
 FIDO2/U2F Hardware tokens and Internal Authenticators (e.g. Android Screenlock or Windows hello) as
 second factor during authentication.
-
-*This is extensions is provided as a demo and as not intended to stay. It is planned to integrate WebAuthn
-support into core in future TYPO3 releases. This extension will be marked abandoned, once that is done.*
 
 ## Installation
 
