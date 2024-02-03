@@ -19,11 +19,22 @@ and therefore a WebAuthn credential is additonally bound to a domain.
 
 This puts the following limitations on usages of this provider:
 
- * Requires HTTPS or a localhost environment
+ * Requires a valid SSL certificate or a localhost environment
    (therefore use `http://{myproject}.localhost` as local development URL)
  * Works only for one domain, multi domain sites need to have TYPO3 backend redirected to exactly
-   one domain, or should use alternative MFA MFA providers.
+   one domain, or should use alternative MFA providers.
 
+### Using WebAuthn Provider in production and staging environments
+
+It is still possible to use WebAuthn in production and staging environments, but it requires some manual steps:
+
+1. Create a security token in the production environment.
+2. Create recovery codes or register a time-based one-time password (TOTP) in production.
+3. Sync the `be_user' table from production to staging.
+4. Log in to staging with a recovery code or TOTP.
+5. Create a security token in the staging environment.
+6. Sync the user's `be_users.mfa' database field back to production.
+7. Optional: Regenerate recovery codes in production to have a fresh set of tokens.
 
 ## Alternative Extensions
 
