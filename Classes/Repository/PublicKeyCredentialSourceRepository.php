@@ -35,6 +35,16 @@ class PublicKeyCredentialSourceRepository implements PublicKeyCredentialSourceRe
         $this->propertyManager = $mfaProviderPropertyManager;
     }
 
+    private function createPublicKeyCredentialSource(array $source)
+    {
+        /* Fill properties added with webautn-lib/webauthn 4.8.0, which may be missing in public keys generated with 4.7.x */
+        $source['backupEligible'] ??= false;
+        $source['backupStatus'] ??= false;
+        $source['uvInitialized'] ??= null;
+        /* @todo: PublicKeyCredentialSource::createFromArray is deprecated */
+        return PublicKeyCredentialSource::createFromArray($source);
+    }
+
     public function findOneByCredentialId(string $publicKeyCredentialId): ?PublicKeyCredentialSource
     {
         $data = $this->load();
@@ -44,7 +54,7 @@ class PublicKeyCredentialSourceRepository implements PublicKeyCredentialSourceRe
             return null;
         }
 
-        return PublicKeyCredentialSource::createFromArray($source);
+        return $this->createPublicKeyCredentialSource($source);
     }
 
     /**
@@ -54,7 +64,7 @@ class PublicKeyCredentialSourceRepository implements PublicKeyCredentialSourceRe
     {
         $sources = [];
         foreach ($this->load() as $data) {
-            $source = PublicKeyCredentialSource::createFromArray($data['publickey']);
+            $source = $this->createPublicKeyCredentialSource($data['publickey']);
             if ($source->getUserHandle() === $publicKeyCredentialUserEntity->getId()) {
                 $sources[] = $source;
             }

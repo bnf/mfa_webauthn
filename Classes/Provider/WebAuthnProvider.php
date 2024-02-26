@@ -218,7 +218,14 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $data = $this->getPublicKey($request);
         $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
         try {
-            $credentialSource = PublicKeyCredentialSource::createFromArray(json_decode($data, true));
+
+            $sourceData = json_decode($data, true);
+            /* Fill properties added with webautn-lib/webauthn 4.8.0, which may be missing in public keys generated with 4.7.x */
+            $sourceData['backupEligible'] ??= false;
+            $sourceData['backupStatus'] ??= false;
+            $sourceData['uvInitialized'] ??= null;
+            /* @todo: PublicKeyCredentialSource::createFromArray is deprecated */
+            $credentialSource = PublicKeyCredentialSource::createFromArray($sourceData);
             $publicKeyCredentialSourceRepository->removeCredentialSource($credentialSource);
         } catch (\Throwable $e) {
             return false;
