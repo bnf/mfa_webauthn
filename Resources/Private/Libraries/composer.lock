@@ -8,25 +8,25 @@
     "packages": [
         {
             "name": "brick/math",
-            "version": "0.11.0",
+            "version": "0.12.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/brick/math.git",
-                "reference": "0ad82ce168c82ba30d1c01ec86116ab52f589478"
+                "reference": "f510c0a40911935b77b86859eb5223d58d660df1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/brick/math/zipball/0ad82ce168c82ba30d1c01ec86116ab52f589478",
-                "reference": "0ad82ce168c82ba30d1c01ec86116ab52f589478",
+                "url": "https://api.github.com/repos/brick/math/zipball/f510c0a40911935b77b86859eb5223d58d660df1",
+                "reference": "f510c0a40911935b77b86859eb5223d58d660df1",
                 "shasum": ""
             },
             "require": {
-                "php": "^8.0"
+                "php": "^8.1"
             },
             "require-dev": {
                 "php-coveralls/php-coveralls": "^2.2",
-                "phpunit/phpunit": "^9.0",
-                "vimeo/psalm": "5.0.0"
+                "phpunit/phpunit": "^10.1",
+                "vimeo/psalm": "5.16.0"
             },
             "type": "library",
             "autoload": {
@@ -46,12 +46,17 @@
                 "arithmetic",
                 "bigdecimal",
                 "bignum",
+                "bignumber",
                 "brick",
-                "math"
+                "decimal",
+                "integer",
+                "math",
+                "mathematics",
+                "rational"
             ],
             "support": {
                 "issues": "https://github.com/brick/math/issues",
-                "source": "https://github.com/brick/math/tree/0.11.0"
+                "source": "https://github.com/brick/math/tree/0.12.1"
             },
             "funding": [
                 {
@@ -59,38 +64,38 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-01-15T23:15:59+00:00"
+            "time": "2023-11-29T23:19:16+00:00"
         },
         {
             "name": "lcobucci/clock",
-            "version": "3.0.0",
+            "version": "3.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lcobucci/clock.git",
-                "reference": "039ef98c6b57b101d10bd11d8fdfda12cbd996dc"
+                "reference": "db3713a61addfffd615b79bf0bc22f0ccc61b86b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lcobucci/clock/zipball/039ef98c6b57b101d10bd11d8fdfda12cbd996dc",
-                "reference": "039ef98c6b57b101d10bd11d8fdfda12cbd996dc",
+                "url": "https://api.github.com/repos/lcobucci/clock/zipball/db3713a61addfffd615b79bf0bc22f0ccc61b86b",
+                "reference": "db3713a61addfffd615b79bf0bc22f0ccc61b86b",
                 "shasum": ""
             },
             "require": {
-                "php": "~8.1.0 || ~8.2.0",
+                "php": "~8.2.0 || ~8.3.0 || ~8.4.0",
                 "psr/clock": "^1.0"
             },
             "provide": {
                 "psr/clock-implementation": "1.0"
             },
             "require-dev": {
-                "infection/infection": "^0.26",
-                "lcobucci/coding-standard": "^9.0",
-                "phpstan/extension-installer": "^1.2",
-                "phpstan/phpstan": "^1.9.4",
-                "phpstan/phpstan-deprecation-rules": "^1.1.1",
-                "phpstan/phpstan-phpunit": "^1.3.2",
-                "phpstan/phpstan-strict-rules": "^1.4.4",
-                "phpunit/phpunit": "^9.5.27"
+                "infection/infection": "^0.29",
+                "lcobucci/coding-standard": "^11.1.0",
+                "phpstan/extension-installer": "^1.3.1",
+                "phpstan/phpstan": "^1.10.25",
+                "phpstan/phpstan-deprecation-rules": "^1.1.3",
+                "phpstan/phpstan-phpunit": "^1.3.13",
+                "phpstan/phpstan-strict-rules": "^1.5.1",
+                "phpunit/phpunit": "^11.3.6"
             },
             "type": "library",
             "autoload": {
@@ -111,7 +116,7 @@
             "description": "Yet another clock abstraction",
             "support": {
                 "issues": "https://github.com/lcobucci/clock/issues",
-                "source": "https://github.com/lcobucci/clock/tree/3.0.0"
+                "source": "https://github.com/lcobucci/clock/tree/3.3.1"
             },
             "funding": [
                 {
@@ -123,28 +128,28 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2022-12-19T15:00:24+00:00"
+            "time": "2024-09-24T20:45:14+00:00"
         },
         {
             "name": "paragonie/constant_time_encoding",
-            "version": "v2.6.3",
+            "version": "v3.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/paragonie/constant_time_encoding.git",
-                "reference": "58c3f47f650c94ec05a151692652a868995d2938"
+                "reference": "df1e7fde177501eee2037dd159cf04f5f301a512"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/58c3f47f650c94ec05a151692652a868995d2938",
-                "reference": "58c3f47f650c94ec05a151692652a868995d2938",
+                "url": "https://api.github.com/repos/paragonie/constant_time_encoding/zipball/df1e7fde177501eee2037dd159cf04f5f301a512",
+                "reference": "df1e7fde177501eee2037dd159cf04f5f301a512",
                 "shasum": ""
             },
             "require": {
-                "php": "^7|^8"
+                "php": "^8"
             },
             "require-dev": {
-                "phpunit/phpunit": "^6|^7|^8|^9",
-                "vimeo/psalm": "^1|^2|^3|^4"
+                "phpunit/phpunit": "^9",
+                "vimeo/psalm": "^4|^5"
             },
             "type": "library",
             "autoload": {
@@ -190,7 +195,7 @@
                 "issues": "https://github.com/paragonie/constant_time_encoding/issues",
                 "source": "https://github.com/paragonie/constant_time_encoding"
             },
-            "time": "2022-06-14T06:56:20+00:00"
+            "time": "2024-05-08T12:36:18+00:00"
         },
         {
             "name": "psr/clock",
@@ -242,27 +247,27 @@
         },
         {
             "name": "spomky-labs/cbor-php",
-            "version": "3.0.2",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Spomky-Labs/cbor-php.git",
-                "reference": "81d5dff7a1101d680729b5789f4359d01b15e6c5"
+                "reference": "499d9bff0a6d59c4f1b813cc617fc3fd56d6dca4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Spomky-Labs/cbor-php/zipball/81d5dff7a1101d680729b5789f4359d01b15e6c5",
-                "reference": "81d5dff7a1101d680729b5789f4359d01b15e6c5",
+                "url": "https://api.github.com/repos/Spomky-Labs/cbor-php/zipball/499d9bff0a6d59c4f1b813cc617fc3fd56d6dca4",
+                "reference": "499d9bff0a6d59c4f1b813cc617fc3fd56d6dca4",
                 "shasum": ""
             },
             "require": {
-                "brick/math": "^0.9|^0.10|^0.11",
+                "brick/math": "^0.9|^0.10|^0.11|^0.12",
                 "ext-mbstring": "*",
                 "php": ">=8.0"
             },
             "require-dev": {
                 "ekino/phpstan-banned-code": "^1.0",
                 "ext-json": "*",
-                "infection/infection": "^0.26",
+                "infection/infection": "^0.29",
                 "php-parallel-lint/php-parallel-lint": "^1.3",
                 "phpstan/extension-installer": "^1.1",
                 "phpstan/phpstan": "^1.0",
@@ -270,12 +275,12 @@
                 "phpstan/phpstan-deprecation-rules": "^1.0",
                 "phpstan/phpstan-phpunit": "^1.0",
                 "phpstan/phpstan-strict-rules": "^1.0",
-                "phpunit/phpunit": "^10.0",
-                "qossmic/deptrac-shim": "^1.0",
-                "rector/rector": "^0.15",
+                "phpunit/phpunit": "^10.1|^11.0",
+                "qossmic/deptrac": "^2.0",
+                "rector/rector": "^1.0",
                 "roave/security-advisories": "dev-latest",
-                "symfony/var-dumper": "^6.0",
-                "symplify/easy-coding-standard": "^11.1"
+                "symfony/var-dumper": "^6.0|^7.0",
+                "symplify/easy-coding-standard": "^12.0"
             },
             "suggest": {
                 "ext-bcmath": "GMP or BCMath extensions will drastically improve the library performance. BCMath extension needed to handle the Big Float and Decimal Fraction Tags",
@@ -309,7 +314,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Spomky-Labs/cbor-php/issues",
-                "source": "https://github.com/Spomky-Labs/cbor-php/tree/3.0.2"
+                "source": "https://github.com/Spomky-Labs/cbor-php/tree/3.1.0"
             },
             "funding": [
                 {
@@ -321,24 +326,24 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2023-02-28T21:37:12+00:00"
+            "time": "2024-07-18T08:37:03+00:00"
         },
         {
             "name": "spomky-labs/pki-framework",
-            "version": "1.1.0",
+            "version": "1.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Spomky-Labs/pki-framework.git",
-                "reference": "d3ba688bf40e7c6e0dabf065ee18fc210734e760"
+                "reference": "0b10c8b53366729417d6226ae89a665f9e2d61b6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Spomky-Labs/pki-framework/zipball/d3ba688bf40e7c6e0dabf065ee18fc210734e760",
-                "reference": "d3ba688bf40e7c6e0dabf065ee18fc210734e760",
+                "url": "https://api.github.com/repos/Spomky-Labs/pki-framework/zipball/0b10c8b53366729417d6226ae89a665f9e2d61b6",
+                "reference": "0b10c8b53366729417d6226ae89a665f9e2d61b6",
                 "shasum": ""
             },
             "require": {
-                "brick/math": "^0.10 || ^0.11",
+                "brick/math": "^0.10|^0.11|^0.12",
                 "ext-mbstring": "*",
                 "php": ">=8.1"
             },
@@ -346,20 +351,21 @@
                 "ekino/phpstan-banned-code": "^1.0",
                 "ext-gmp": "*",
                 "ext-openssl": "*",
-                "infection/infection": "^0.26",
+                "infection/infection": "^0.28",
                 "php-parallel-lint/php-parallel-lint": "^1.3",
+                "phpstan/extension-installer": "^1.3",
                 "phpstan/phpstan": "^1.8",
                 "phpstan/phpstan-beberlei-assert": "^1.0",
                 "phpstan/phpstan-deprecation-rules": "^1.0",
                 "phpstan/phpstan-phpunit": "^1.1",
                 "phpstan/phpstan-strict-rules": "^1.3",
-                "phpunit/phpunit": "^10.0",
-                "rector/rector": "^0.15",
+                "phpunit/phpunit": "^10.1|^11.0",
+                "rector/rector": "^1.0",
                 "roave/security-advisories": "dev-latest",
-                "symfony/phpunit-bridge": "^6.1",
-                "symfony/var-dumper": "^6.1",
-                "symplify/easy-coding-standard": "^11.1",
-                "thecodingmachine/phpstan-safe-rule": "^1.2"
+                "symfony/phpunit-bridge": "^6.4|^7.0",
+                "symfony/string": "^6.4|^7.0",
+                "symfony/var-dumper": "^6.4|^7.0",
+                "symplify/easy-coding-standard": "^12.0"
             },
             "suggest": {
                 "ext-bcmath": "For better performance (or GMP)",
@@ -419,7 +425,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Spomky-Labs/pki-framework/issues",
-                "source": "https://github.com/Spomky-Labs/pki-framework/tree/1.1.0"
+                "source": "https://github.com/Spomky-Labs/pki-framework/tree/1.2.1"
             },
             "funding": [
                 {
@@ -431,20 +437,20 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2023-02-13T17:21:24+00:00"
+            "time": "2024-03-30T18:03:49+00:00"
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v3.2.1",
+            "version": "v3.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "e2d1534420bd723d0ef5aec58a22c5fe60ce6f5e"
+                "reference": "0e0d29ce1f20deffb4ab1b016a7257c4f1e789a1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/e2d1534420bd723d0ef5aec58a22c5fe60ce6f5e",
-                "reference": "e2d1534420bd723d0ef5aec58a22c5fe60ce6f5e",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/0e0d29ce1f20deffb4ab1b016a7257c4f1e789a1",
+                "reference": "0e0d29ce1f20deffb4ab1b016a7257c4f1e789a1",
                 "shasum": ""
             },
             "require": {
@@ -453,7 +459,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "3.3-dev"
+                    "dev-main": "3.5-dev"
                 },
                 "thanks": {
                     "name": "symfony/contracts",
@@ -482,7 +488,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.2.1"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.5.0"
             },
             "funding": [
                 {
@@ -498,24 +504,24 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-03-01T10:25:55+00:00"
+            "time": "2024-04-18T09:32:20+00:00"
         },
         {
             "name": "symfony/polyfill-uuid",
-            "version": "v1.27.0",
+            "version": "v1.31.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-uuid.git",
-                "reference": "f3cf1a645c2734236ed1e2e671e273eeb3586166"
+                "reference": "21533be36c24be3f4b1669c4725c7d1d2bab4ae2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-uuid/zipball/f3cf1a645c2734236ed1e2e671e273eeb3586166",
-                "reference": "f3cf1a645c2734236ed1e2e671e273eeb3586166",
+                "url": "https://api.github.com/repos/symfony/polyfill-uuid/zipball/21533be36c24be3f4b1669c4725c7d1d2bab4ae2",
+                "reference": "21533be36c24be3f4b1669c4725c7d1d2bab4ae2",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=7.2"
             },
             "provide": {
                 "ext-uuid": "*"
@@ -525,9 +531,6 @@
             },
             "type": "library",
             "extra": {
-                "branch-alias": {
-                    "dev-main": "1.27-dev"
-                },
                 "thanks": {
                     "name": "symfony/polyfill",
                     "url": "https://github.com/symfony/polyfill"
@@ -564,7 +567,7 @@
                 "uuid"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-uuid/tree/v1.27.0"
+                "source": "https://github.com/symfony/polyfill-uuid/tree/v1.31.0"
             },
             "funding": [
                 {
@@ -580,28 +583,28 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-11-03T14:55:06+00:00"
+            "time": "2024-09-09T11:45:10+00:00"
         },
         {
             "name": "symfony/uid",
-            "version": "v6.2.7",
+            "version": "v7.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/uid.git",
-                "reference": "d30c72a63897cfa043e1de4d4dd2ffa9ecefcdc0"
+                "reference": "8c7bb8acb933964055215d89f9a9871df0239317"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/uid/zipball/d30c72a63897cfa043e1de4d4dd2ffa9ecefcdc0",
-                "reference": "d30c72a63897cfa043e1de4d4dd2ffa9ecefcdc0",
+                "url": "https://api.github.com/repos/symfony/uid/zipball/8c7bb8acb933964055215d89f9a9871df0239317",
+                "reference": "8c7bb8acb933964055215d89f9a9871df0239317",
                 "shasum": ""
             },
             "require": {
-                "php": ">=8.1",
+                "php": ">=8.2",
                 "symfony/polyfill-uuid": "^1.15"
             },
             "require-dev": {
-                "symfony/console": "^5.4|^6.0"
+                "symfony/console": "^6.4|^7.0"
             },
             "type": "library",
             "autoload": {
@@ -638,7 +641,7 @@
                 "uuid"
             ],
             "support": {
-                "source": "https://github.com/symfony/uid/tree/v6.2.7"
+                "source": "https://github.com/symfony/uid/tree/v7.1.5"
             },
             "funding": [
                 {
@@ -654,43 +657,43 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-02-14T08:44:56+00:00"
+            "time": "2024-09-17T09:16:35+00:00"
         },
         {
             "name": "web-auth/cose-lib",
-            "version": "4.2.0",
+            "version": "4.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/web-auth/cose-lib.git",
-                "reference": "9e0cc49810b445ed0aa50d122ee82c63882af9a0"
+                "reference": "2166016e48e0214f4f63320a7758a9386d14c92a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/web-auth/cose-lib/zipball/9e0cc49810b445ed0aa50d122ee82c63882af9a0",
-                "reference": "9e0cc49810b445ed0aa50d122ee82c63882af9a0",
+                "url": "https://api.github.com/repos/web-auth/cose-lib/zipball/2166016e48e0214f4f63320a7758a9386d14c92a",
+                "reference": "2166016e48e0214f4f63320a7758a9386d14c92a",
                 "shasum": ""
             },
             "require": {
-                "brick/math": "^0.9|^0.10|^0.11",
+                "brick/math": "^0.9|^0.10|^0.11|^0.12",
                 "ext-json": "*",
-                "ext-mbstring": "*",
                 "ext-openssl": "*",
                 "php": ">=8.1",
                 "spomky-labs/pki-framework": "^1.0"
             },
             "require-dev": {
                 "ekino/phpstan-banned-code": "^1.0",
-                "infection/infection": "^0.26.12",
+                "infection/infection": "^0.29",
                 "php-parallel-lint/php-parallel-lint": "^1.3",
+                "phpstan/extension-installer": "^1.3",
                 "phpstan/phpstan": "^1.7",
                 "phpstan/phpstan-deprecation-rules": "^1.0",
                 "phpstan/phpstan-phpunit": "^1.1",
                 "phpstan/phpstan-strict-rules": "^1.2",
-                "phpunit/phpunit": "^10.0",
-                "qossmic/deptrac-shim": "^1.0",
-                "rector/rector": "^0.15",
-                "symfony/phpunit-bridge": "^6.1",
-                "symplify/easy-coding-standard": "^11.0"
+                "phpunit/phpunit": "^10.1|^11.0",
+                "qossmic/deptrac": "^2.0",
+                "rector/rector": "^1.0",
+                "symfony/phpunit-bridge": "^6.4|^7.0",
+                "symplify/easy-coding-standard": "^12.0"
             },
             "suggest": {
                 "ext-bcmath": "For better performance, please install either GMP (recommended) or BCMath extension",
@@ -724,7 +727,7 @@
             ],
             "support": {
                 "issues": "https://github.com/web-auth/cose-lib/issues",
-                "source": "https://github.com/web-auth/cose-lib/tree/4.2.0"
+                "source": "https://github.com/web-auth/cose-lib/tree/4.4.0"
             },
             "funding": [
                 {
@@ -736,124 +739,57 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2023-02-28T18:05:22+00:00"
-        },
-        {
-            "name": "web-auth/metadata-service",
-            "version": "4.5.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/web-auth/webauthn-metadata-service.git",
-                "reference": "82b3a517894987db1f8959a9320b9891515af9e7"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/web-auth/webauthn-metadata-service/zipball/82b3a517894987db1f8959a9320b9891515af9e7",
-                "reference": "82b3a517894987db1f8959a9320b9891515af9e7",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "lcobucci/clock": "^2.2|^3.0",
-                "paragonie/constant_time_encoding": "^2.6",
-                "php": ">=8.1",
-                "psr/clock": "^1.0",
-                "psr/event-dispatcher": "^1.0",
-                "psr/http-client": "^1.0",
-                "psr/http-factory": "^1.0",
-                "psr/log": "^1.0|^2.0|^3.0",
-                "spomky-labs/pki-framework": "^1.0",
-                "symfony/deprecation-contracts": "^3.2"
-            },
-            "suggest": {
-                "psr/clock-implementation": "As of 4.5.x, the PSR Clock implementation will replace lcobucci/clock",
-                "psr/log-implementation": "Recommended to receive logs from the library",
-                "web-token/jwt-key-mgmt": "Mandatory for fetching Metadata Statement from distant sources",
-                "web-token/jwt-signature-algorithm-ecdsa": "Mandatory for fetching Metadata Statement from distant sources"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Webauthn\\MetadataService\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Florent Morselli",
-                    "homepage": "https://github.com/Spomky"
-                },
-                {
-                    "name": "All contributors",
-                    "homepage": "https://github.com/web-auth/metadata-service/contributors"
-                }
-            ],
-            "description": "Metadata Service for FIDO2/Webauthn",
-            "homepage": "https://github.com/web-auth",
-            "keywords": [
-                "FIDO2",
-                "fido",
-                "webauthn"
-            ],
-            "support": {
-                "source": "https://github.com/web-auth/webauthn-metadata-service/tree/4.5.1"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/Spomky",
-                    "type": "github"
-                },
-                {
-                    "url": "https://www.patreon.com/FlorentMorselli",
-                    "type": "patreon"
-                }
-            ],
-            "time": "2023-01-22T17:02:25+00:00"
+            "time": "2024-07-18T08:47:32+00:00"
         },
         {
             "name": "web-auth/webauthn-lib",
-            "version": "4.5.1",
+            "version": "4.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/web-auth/webauthn-lib.git",
-                "reference": "64920a2eb97d93cdfe30bcb2fdba3b48b669ad04"
+                "reference": "fd7a0943c663b325e92ad562c2bcc943e77beeac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/web-auth/webauthn-lib/zipball/64920a2eb97d93cdfe30bcb2fdba3b48b669ad04",
-                "reference": "64920a2eb97d93cdfe30bcb2fdba3b48b669ad04",
+                "url": "https://api.github.com/repos/web-auth/webauthn-lib/zipball/fd7a0943c663b325e92ad562c2bcc943e77beeac",
+                "reference": "fd7a0943c663b325e92ad562c2bcc943e77beeac",
                 "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "ext-mbstring": "*",
                 "ext-openssl": "*",
-                "paragonie/constant_time_encoding": "^2.6",
+                "lcobucci/clock": "^2.2|^3.0",
+                "paragonie/constant_time_encoding": "^2.6|^3.0",
                 "php": ">=8.1",
+                "psr/clock": "^1.0",
                 "psr/event-dispatcher": "^1.0",
                 "psr/http-client": "^1.0",
                 "psr/http-factory": "^1.0",
                 "psr/log": "^1.0|^2.0|^3.0",
                 "spomky-labs/cbor-php": "^3.0",
-                "symfony/uid": "^6.1",
-                "web-auth/cose-lib": "^4.0.12",
-                "web-auth/metadata-service": "self.version"
-            },
-            "require-dev": {
-                "symfony/event-dispatcher": "^6.1"
+                "spomky-labs/pki-framework": "^1.0",
+                "symfony/deprecation-contracts": "^3.2",
+                "symfony/uid": "^6.1|^7.0",
+                "web-auth/cose-lib": "^4.2.3"
             },
             "suggest": {
+                "phpdocumentor/reflection-docblock": "As of 4.5.x, the phpdocumentor/reflection-docblock component will become mandatory for converting objects such as the Metadata Statement",
+                "psr/clock-implementation": "As of 4.5.x, the PSR Clock implementation will replace lcobucci/clock",
                 "psr/log-implementation": "Recommended to receive logs from the library",
                 "symfony/event-dispatcher": "Recommended to use dispatched events",
-                "web-token/jwt-key-mgmt": "Mandatory for the AndroidSafetyNet Attestation Statement support",
-                "web-token/jwt-signature-algorithm-ecdsa": "Recommended for the AndroidSafetyNet Attestation Statement support",
-                "web-token/jwt-signature-algorithm-eddsa": "Recommended for the AndroidSafetyNet Attestation Statement support",
-                "web-token/jwt-signature-algorithm-rsa": "Mandatory for the AndroidSafetyNet Attestation Statement support"
+                "symfony/property-access": "As of 4.5.x, the symfony/serializer component will become mandatory for converting objects such as the Metadata Statement",
+                "symfony/property-info": "As of 4.5.x, the symfony/serializer component will become mandatory for converting objects such as the Metadata Statement",
+                "symfony/serializer": "As of 4.5.x, the symfony/serializer component will become mandatory for converting objects such as the Metadata Statement",
+                "web-token/jwt-library": "Mandatory for fetching Metadata Statement from distant sources"
             },
             "type": "library",
+            "extra": {
+                "thanks": {
+                    "name": "web-auth/webauthn-framework",
+                    "url": "https://github.com/web-auth/webauthn-framework"
+                }
+            },
             "autoload": {
                 "psr-4": {
                     "Webauthn\\": "src/"
@@ -881,7 +817,7 @@
                 "webauthn"
             ],
             "support": {
-                "source": "https://github.com/web-auth/webauthn-lib/tree/4.5.1"
+                "source": "https://github.com/web-auth/webauthn-lib/tree/4.9.1"
             },
             "funding": [
                 {
@@ -893,7 +829,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2023-01-31T17:31:30+00:00"
+            "time": "2024-07-16T18:36:36+00:00"
         }
     ],
     "packages-dev": [],
@@ -904,5 +840,5 @@
     "prefer-lowest": false,
     "platform": [],
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
