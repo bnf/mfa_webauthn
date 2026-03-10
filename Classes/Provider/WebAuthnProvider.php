@@ -34,7 +34,9 @@ use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
+use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AuthenticatorSelectionCriteria;
+use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
@@ -182,8 +184,10 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $keyDescription = $this->getDescription($request);
         $keyIcon = $this->getIcon($request);
 
-        $creationOptions = PublicKeyCredentialCreationOptions::createFromArray(
-            $propertyManager->getProperty('creationOptions')
+        $serializer = $this->createSerializer();
+        $creationOptions = $serializer->denormalize(
+            $propertyManager->getProperty('creationOptions'),
+            PublicKeyCredentialCreationOptions::class
         );
         $hostname = $this->getNormalizedParams($request)->getRequestHostOnly();
 
@@ -218,14 +222,8 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $data = $this->getPublicKey($request);
         $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
         try {
-
             $sourceData = json_decode($data, true);
-            /* Fill properties added with webautn-lib/webauthn 4.8.0, which may be missing in public keys generated with 4.7.x */
-            $sourceData['backupEligible'] ??= false;
-            $sourceData['backupStatus'] ??= false;
-            $sourceData['uvInitialized'] ??= null;
-            /* @todo: PublicKeyCredentialSource::createFromArray is deprecated */
-            $credentialSource = PublicKeyCredentialSource::createFromArray($sourceData);
+            $credentialSource = $this->createSerializer()->denormalize($sourceData, PublicKeyCredentialSource::class);
             $publicKeyCredentialSourceRepository->removeCredentialSource($credentialSource);
         } catch (\Throwable $e) {
             return false;
@@ -237,12 +235,15 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     {
         $publicKey = $this->getPublicKey($request);
 
-        $userEntity = PublicKeyCredentialUserEntity::createFromArray(
-            $propertyManager->getProperty('userEntity')
+        $serializer = $this->createSerializer();
+        $userEntity = $serializer->denormalize(
+            $propertyManager->getProperty('userEntity'),
+            PublicKeyCredentialUserEntity::class
         );
         // get options stored during the previous (prepareAuth) step
-        $publicKeyCredentialRequestOptions = PublicKeyCredentialRequestOptions::createFromArray(
-            $propertyManager->getProperty('lastRequest')
+        $publicKeyCredentialRequestOptions = $serializer->denormalize(
+            $propertyManager->getProperty('lastRequest'),
+            PublicKeyCredentialRequestOptions::class
         );
 
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
@@ -278,10 +279,10 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     ): string {
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
 
-        $authenticatorSelectionCriteria = new AuthenticatorSelectionCriteria();
-        $authenticatorSelectionCriteria->setUserVerification($this->userVerification);
-        $authenticatorSelectionCriteria->setAuthenticatorAttachment($this->authenticatorAttachment);
-        $authenticatorSelectionCriteria->setRequireResidentKey(false);
+        $authenticatorSelectionCriteria = new AuthenticatorSelectionCriteria(
+            $this->authenticatorAttachment,
+            $this->userVerification,
+        );
 
         $userEntity = $this->createUserEntity($propertyManager);
 
@@ -299,9 +300,10 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             $authenticatorSelectionCriteria
         );
 
+        $serializer = $this->createSerializer();
         $properties = [
-            'creationOptions' => $creationOptions,
-            'userEntity' => $userEntity,
+            'creationOptions' => $serializer->normalize($creationOptions),
+            'userEntity' => $serializer->normalize($userEntity),
         ];
         $propertyManager->hasProviderEntry()
             ? $propertyManager->updateProperties($properties)
@@ -333,7 +335,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         return $this->renderHtmlTag(
             'mfa-webauthn-setup',
             [
-                'credential-creation-options' => $creationOptions,
+                'credential-creation-options' => $serializer->normalize($creationOptions),
                 'credentials' => $keys,
                 'mode' => $type,
                 'labels' => $labels,
@@ -344,7 +346,10 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
     private function prepareAuth(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): string
     {
-        $userEntity = PublicKeyCredentialUserEntity::createFromArray($propertyManager->getProperty('userEntity'));
+        $userEntity = $this->createSerializer()->denormalize(
+            $propertyManager->getProperty('userEntity'),
+            PublicKeyCredentialUserEntity::class
+        );
         $keys = $propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY);
 
         $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
@@ -364,7 +369,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         );
 
         $propertyManager->updateProperties([
-            'lastRequest' => $publicKeyCredentialRequestOptions
+            'lastRequest' => $this->createSerializer()->normalize($publicKeyCredentialRequestOptions),
         ]);
 
         // @todo: Detect FE
@@ -376,7 +381,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         }
 
         return $this->renderHtmlTag('mfa-webauthn-authenticator', [
-            'credential-request-options' => $publicKeyCredentialRequestOptions,
+            'credential-request-options' => $this->createSerializer()->normalize($publicKeyCredentialRequestOptions),
             'locked' => $this->isLocked($propertyManager),
         ]);
     }
@@ -412,6 +417,11 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $uniqueid = $loginType . ':' . $userData['uid'];
         $displayName = ($userData['realName'] ?? '') ?: $userName;
         return new PublicKeyCredentialUserEntity($userName, $uniqueid, $displayName);
+    }
+
+    private function createSerializer(): \Symfony\Component\Serializer\SerializerInterface
+    {
+        return (new WebauthnSerializerFactory(new AttestationStatementSupportManager()))->create();
     }
 
     private function createWebauthnServer(
