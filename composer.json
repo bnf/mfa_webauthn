@@ -11,8 +11,8 @@
     ],
     "require": {
         "php": "^8.1",
-        "typo3/cms-core": "^11.2 || ^12.0 || ^13.0 || ^14.0",
-        "web-auth/webauthn-lib": "^4.5"
+        "typo3/cms-core": "^12.0 || ^13.0 || ^14.0",
+        "web-auth/webauthn-lib": "^5.2.4"
     },
     "autoload": {
         "psr-4": {
@@ -29,5 +29,11 @@
     },
     "require-dev": {
         "phpstan/phpstan": "^1.8"
+    },
+    "config": {
+        "allow-plugins": {
+            "typo3/class-alias-loader": true,
+            "typo3/cms-composer-installers": true
+        }
     }
 }

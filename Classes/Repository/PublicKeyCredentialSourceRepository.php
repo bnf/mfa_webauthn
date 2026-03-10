@@ -17,14 +17,18 @@ declare(strict_types=1);
 
 namespace Bnf\MfaWebauthn\Repository;
 
+use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
+use Symfony\Component\Serializer\Normalizer\UidNormalizer;
+use Symfony\Component\Serializer\Serializer;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderPropertyManager;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Webauthn\PublicKeyCredentialSourceRepository as PublicKeyCredentialSourceRepositoryInterface;
+use Webauthn\Denormalizer\PublicKeyCredentialSourceDenormalizer;
+use Webauthn\Denormalizer\TrustPathDenormalizer;
 use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
 
-class PublicKeyCredentialSourceRepository implements PublicKeyCredentialSourceRepositoryInterface
+class PublicKeyCredentialSourceRepository
 {
     public const PROPERTY = 'publicKeyCredentialSources';
 
@@ -35,14 +39,19 @@ class PublicKeyCredentialSourceRepository implements PublicKeyCredentialSourceRe
         $this->propertyManager = $mfaProviderPropertyManager;
     }
 
-    private function createPublicKeyCredentialSource(array $source)
+    private static function createSerializer(): Serializer
     {
-        /* Fill properties added with webautn-lib/webauthn 4.8.0, which may be missing in public keys generated with 4.7.x */
-        $source['backupEligible'] ??= false;
-        $source['backupStatus'] ??= false;
-        $source['uvInitialized'] ??= null;
-        /* @todo: PublicKeyCredentialSource::createFromArray is deprecated */
-        return PublicKeyCredentialSource::createFromArray($source);
+        return new Serializer([
+            new PublicKeyCredentialSourceDenormalizer(),
+            new TrustPathDenormalizer(),
+            new UidNormalizer(),
+            new ArrayDenormalizer(),
+        ]);
+    }
+
+    private function createPublicKeyCredentialSource(array $source): PublicKeyCredentialSource
+    {
+        return self::createSerializer()->denormalize($source, PublicKeyCredentialSource::class);
     }
 
     public function findOneByCredentialId(string $publicKeyCredentialId): ?PublicKeyCredentialSource
@@ -65,7 +74,7 @@ class PublicKeyCredentialSourceRepository implements PublicKeyCredentialSourceRe
         $sources = [];
         foreach ($this->load() as $data) {
             $source = $this->createPublicKeyCredentialSource($data['publickey']);
-            if ($source->getUserHandle() === $publicKeyCredentialUserEntity->getId()) {
+            if ($source->userHandle === $publicKeyCredentialUserEntity->id) {
                 $sources[] = $source;
             }
         }
@@ -74,8 +83,8 @@ class PublicKeyCredentialSourceRepository implements PublicKeyCredentialSourceRe
 
     public function saveCredentialSource(PublicKeyCredentialSource $publicKeyCredentialSource): void
     {
-        $identifier = base64_encode($publicKeyCredentialSource->getPublicKeyCredentialId());
-        $source = $publicKeyCredentialSource->jsonSerialize();
+        $identifier = base64_encode($publicKeyCredentialSource->publicKeyCredentialId);
+        $source = self::createSerializer()->normalize($publicKeyCredentialSource);
 
         $data = $this->load();
         $data[$identifier]['publickey'] = $source;
@@ -85,10 +94,10 @@ class PublicKeyCredentialSourceRepository implements PublicKeyCredentialSourceRe
 
     public function addCredentialSource(PublicKeyCredentialSource $publicKeyCredentialSource, string $description, string $icon): void
     {
-        $identifier = base64_encode($publicKeyCredentialSource->getPublicKeyCredentialId());
+        $identifier = base64_encode($publicKeyCredentialSource->publicKeyCredentialId);
 
         $source = [];
-        $source['publickey'] = $publicKeyCredentialSource->jsonSerialize();
+        $source['publickey'] = self::createSerializer()->normalize($publicKeyCredentialSource);
         $source['description'] = $description;
         $source['icon'] = $icon;
         $source['created'] = GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('date', 'timestamp');
@@ -100,7 +109,7 @@ class PublicKeyCredentialSourceRepository implements PublicKeyCredentialSourceRe
 
     public function removeCredentialSource(PublicKeyCredentialSource $publicKeyCredentialSource): void
     {
-        $identifier = base64_encode($publicKeyCredentialSource->getPublicKeyCredentialId());
+        $identifier = base64_encode($publicKeyCredentialSource->publicKeyCredentialId);
 
         $data = $this->load();
         if (!isset($data[$identifier])) {
