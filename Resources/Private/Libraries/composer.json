@@ -20,6 +20,9 @@
         "symfony/uid": ">=6.4"
     },
     "config": {
+        "platform": {
+            "php": "8.2.0"
+        },
         "vendor-dir": "."
     }
 }
