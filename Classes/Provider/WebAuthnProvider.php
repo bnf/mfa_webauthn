@@ -87,8 +87,12 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
     public function isActive(MfaProviderPropertyManager $propertyManager): bool
     {
-        return (bool)$propertyManager->getProperty('active') &&
-            count($propertyManager->getProperty(CredentialRecordRepository::PROPERTY) ?? []) > 0;
+        if (!(bool)$propertyManager->getProperty('active')) {
+            return false;
+        }
+        /** @var array<mixed> */
+        $credentialRecords = $propertyManager->getProperty(CredentialRecordRepository::PROPERTY) ?? [];
+        return count($credentialRecords) > 0;
     }
 
     public function isLocked(MfaProviderPropertyManager $propertyManager): bool
@@ -311,6 +315,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             ? $propertyManager->updateProperties($properties)
             : $propertyManager->createProviderEntry($properties);
 
+        /** @var array<mixed> $keys */
         $keys = $propertyManager->getProperty(CredentialRecordRepository::PROPERTY) ?? [];
 
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
@@ -330,14 +335,15 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             ];
         }
 
+        /** @var array<mixed> $credentialCreationOptions */
+        $credentialCreationOptions = $serializer->normalize($creationOptions);
         return $this->renderHtmlTag(
             'mfa-webauthn-setup',
             [
-                'credential-creation-options' => $serializer->normalize($creationOptions),
+                'credential-creation-options' => $credentialCreationOptions,
                 'credentials' => $keys,
                 'mode' => $type,
                 'labels' => $labels,
-                'locked' => $this->isLocked($propertyManager),
             ]
         );
     }
@@ -376,30 +382,44 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
         $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
 
+        /** @var array<mixed> $credentialRequestOptions */
+        $credentialRequestOptions = $serializer->normalize($publicKeyCredentialRequestOptions);
         return $this->renderHtmlTag('mfa-webauthn-authenticator', [
-            'credential-request-options' => $serializer->normalize($publicKeyCredentialRequestOptions),
-            'locked' => $this->isLocked($propertyManager),
+            'credential-request-options' => $credentialRequestOptions,
         ]);
     }
 
     private function getAction(ServerRequestInterface $request): string
     {
-        return trim((string)($request->getQueryParams()['webauthn_action'] ?? $request->getParsedBody()['webauthn_action'] ?? ''));
+        return $this->getRequestData($request, 'action');
     }
 
     private function getPublicKey(ServerRequestInterface $request): string
     {
-        return trim((string)($request->getQueryParams()['webauthn_publicKeyCredential'] ?? $request->getParsedBody()['webauthn_publicKeyCredential'] ?? ''));
+        return $this->getRequestData($request, 'publicKeyCredential');
     }
 
     private function getDescription(ServerRequestInterface $request): string
     {
-        return trim((string)($request->getQueryParams()['webauthn_publicKeyDescription'] ?? $request->getParsedBody()['webauthn_publicKeyDescription'] ?? ''));
+        return $this->getRequestData($request, 'publicKeyDescription');
     }
 
     private function getIcon(ServerRequestInterface $request): string
     {
-        return trim((string)($request->getQueryParams()['webauthn_publicKeyIcon'] ?? $request->getParsedBody()['webauthn_publicKeyIcon'] ?? ''));
+        return $this->getRequestData($request, 'publicKeyIcon');
+    }
+
+    private function getRequestData(ServerRequestInterface $request, string $identifier): string
+    {
+        $index = 'webauthn_' . $identifier;
+        if (isset($request->getQueryParams()[$index])) {
+            return trim((string)$request->getQueryParams()[$index]);
+        }
+        $body = $request->getParsedBody();
+        if (!is_array($body) || !isset($body[$index])) {
+            return '';
+        }
+        return trim((string)$body[$index]);
     }
 
     private function createUserEntity(MfaProviderPropertyManager $propertyManager): PublicKeyCredentialUserEntity
@@ -442,12 +462,17 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         return $server;
     }
 
+    /**
+     * @param array<string, string|int|float|array<mixed>|ArrayObject<mixed>|object> $attributes
+     */
     private function renderHtmlTag(string $tagName, array $attributes = [], string $content = ''): string
     {
         $unescaped = [];
         foreach ($attributes as $name => $value) {
             if (is_object($value) || is_array($value)) {
                 $value = GeneralUtility::jsonEncodeForHtmlAttribute($value, false);
+            } else {
+                $value = (string)$value;
             }
             $unescaped[$name] = $value;
         }
