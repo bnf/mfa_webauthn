@@ -12,12 +12,6 @@ export default {
             name: 'webauthn',
             plugins: [terser()]
         },
-        {
-            file: '../Resources/Public/JavaScript/MfaWebAuthn.js',
-            format: 'amd',
-            name: 'webauthn',
-            plugins: [terser()]
-        },
     ],
     plugins: [
         resolve({

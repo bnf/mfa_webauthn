@@ -29,7 +29,6 @@ use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderPropertyManager;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaViewType;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Core\Environment;
-use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -312,11 +311,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $keys = $propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY) ?? [];
 
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        if ((new Typo3Version())->getMajorVersion() >= 12) {
-            $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
-        } else {
-            $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthn');
-        }
+        $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
 
         $labels = [
             'singular' => 'security key',
@@ -374,11 +369,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
         // @todo: Detect FE
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        if ((new Typo3Version())->getMajorVersion() >= 12) {
-            $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
-        } else {
-            $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthn');
-        }
+        $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
 
         return $this->renderHtmlTag('mfa-webauthn-authenticator', [
             'credential-request-options' => $this->createSerializer()->normalize($publicKeyCredentialRequestOptions),
