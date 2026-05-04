@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ec80cd0982e961daa0e183a087576310",
+    "content-hash": "0bc8d1743bff1b79a315258b5ef56912",
     "packages": [
         {
             "name": "brick/math",
@@ -888,16 +888,16 @@
         },
         {
             "name": "web-auth/webauthn-lib",
-            "version": "5.2.5",
+            "version": "5.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/web-auth/webauthn-lib.git",
-                "reference": "c28f27cb8f968d2b84db48587563f03bb451b60a"
+                "reference": "a272f254c056fb3d6c80a4801d3c7c5fedc6a08d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/web-auth/webauthn-lib/zipball/c28f27cb8f968d2b84db48587563f03bb451b60a",
-                "reference": "c28f27cb8f968d2b84db48587563f03bb451b60a",
+                "url": "https://api.github.com/repos/web-auth/webauthn-lib/zipball/a272f254c056fb3d6c80a4801d3c7c5fedc6a08d",
+                "reference": "a272f254c056fb3d6c80a4801d3c7c5fedc6a08d",
                 "shasum": ""
             },
             "require": {
@@ -905,18 +905,18 @@
                 "ext-openssl": "*",
                 "paragonie/constant_time_encoding": "^2.6|^3.0",
                 "php": ">=8.2",
-                "phpdocumentor/reflection-docblock": "^5.3",
+                "phpdocumentor/reflection-docblock": "^5.3|^6.0",
                 "psr/clock": "^1.0",
                 "psr/event-dispatcher": "^1.0",
                 "psr/log": "^1.0|^2.0|^3.0",
                 "spomky-labs/cbor-php": "^3.0",
                 "spomky-labs/pki-framework": "^1.0",
-                "symfony/clock": "^6.4|^7.0",
+                "symfony/clock": "^6.4|^7.0|^8.0",
                 "symfony/deprecation-contracts": "^3.2",
-                "symfony/property-access": "^6.4|^7.0",
-                "symfony/property-info": "^6.4|^7.0",
-                "symfony/serializer": "^6.4|^7.0",
-                "symfony/uid": "^6.4|^7.0",
+                "symfony/property-access": "^6.4|^7.0|^8.0",
+                "symfony/property-info": "^6.4|^7.0|^8.0",
+                "symfony/serializer": "^6.4|^7.0|^8.0",
+                "symfony/uid": "^6.4|^7.0|^8.0",
                 "web-auth/cose-lib": "^4.2.3"
             },
             "suggest": {
@@ -958,7 +958,7 @@
                 "webauthn"
             ],
             "support": {
-                "source": "https://github.com/web-auth/webauthn-lib/tree/5.2.5"
+                "source": "https://github.com/web-auth/webauthn-lib/tree/5.3.1"
             },
             "funding": [
                 {
@@ -970,7 +970,7 @@
                     "type": "patreon"
                 }
             ],
-            "time": "2026-03-23T21:43:02+00:00"
+            "time": "2026-05-01T12:14:37+00:00"
         },
         {
             "name": "webmozart/assert",
