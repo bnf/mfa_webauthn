@@ -21,6 +21,9 @@ use Cose\Algorithm\Signature\EdDSA;
 use Cose\Algorithm\Signature\RSA;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Webauthn\AttestationStatement\AndroidKeyAttestationStatementSupport;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AttestationStatement\FidoU2FAttestationStatementSupport;
@@ -42,7 +45,6 @@ use Webauthn\PublicKeyCredentialDescriptor;
 use Webauthn\PublicKeyCredentialParameters;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
-//use Webauthn\CredentialRecord;
 use Webauthn\PublicKeyCredentialUserEntity;
 
 
@@ -93,8 +95,9 @@ class Server
      */
     private $securedRelyingPartyId = [];
 
-    public function __construct(PublicKeyCredentialRpEntity $relyingParty, CredentialRecordRepository $credentialRecordRepository)
-    {
+    public function __construct(
+        PublicKeyCredentialRpEntity $relyingParty,
+    ) {
         $this->rpEntity = $relyingParty;
 
         $this->coseAlgorithmManagerFactory = new ManagerFactory();
@@ -112,8 +115,17 @@ class Server
         $this->coseAlgorithmManagerFactory->add('Ed25519', new EdDSA\Ed25519());
 
         $this->selectedAlgorithms = ['RS256', 'RS512', 'PS256', 'PS512', 'ES256', 'ES512', 'Ed25519'];
-        $this->credentialRecordRepository = $credentialRecordRepository;
         $this->extensionOutputCheckerHandler = new ExtensionOutputCheckerHandler();
+    }
+
+    public function getCredentialRecordRepository(): CredentialRecordRepository
+    {
+        return $this->credentialRecordRepository;
+    }
+
+    public function setCredentialRecordRepository(CredentialRecordRepository $credentialRecordRepository): void
+    {
+        $this->credentialRecordRepository = $credentialRecordRepository;
     }
 
     /**
@@ -201,8 +213,8 @@ class Server
     public function loadAndCheckAttestationResponse(string $data, PublicKeyCredentialCreationOptions $publicKeyCredentialCreationOptions, string $hostname): CredentialRecord
     {
         $attestationStatementSupportManager = $this->getAttestationStatementSupportManager();
-        $serializer = (new WebauthnSerializerFactory($attestationStatementSupportManager))->create();
 
+        $serializer = $this->getSerializer($attestationStatementSupportManager);
         $publicKeyCredential = $serializer->deserialize($data, PublicKeyCredential::class, 'json');
         $authenticatorResponse = $publicKeyCredential->response;
         $authenticatorResponse instanceof AuthenticatorAttestationResponse || throw new \InvalidArgumentException('Not an authenticator attestation response');
@@ -221,7 +233,7 @@ class Server
     public function loadAndCheckAssertionResponse(string $data, PublicKeyCredentialRequestOptions $publicKeyCredentialRequestOptions, ?PublicKeyCredentialUserEntity $userEntity, string $hostname): CredentialRecord
     {
         $attestationStatementSupportManager = $this->getAttestationStatementSupportManager();
-        $serializer = (new WebauthnSerializerFactory($attestationStatementSupportManager))->create();
+        $serializer = $this->getSerializer($attestationStatementSupportManager);
 
         $publicKeyCredential = $serializer->deserialize($data, PublicKeyCredential::class, 'json');
         $authenticatorResponse = $publicKeyCredential->response;
@@ -253,6 +265,19 @@ class Server
     public function setLogger(LoggerInterface $logger): void
     {
         $this->logger = $logger;
+    }
+
+    public function getSerializer(?AttestationStatementSupportManager $attestationStatementSupportManager = null): SerializerInterface&NormalizerInterface&DenormalizerInterface
+    {
+        $attestationStatementSupportManager ??= $this->getAttestationStatementSupportManager();
+        $serializer = (new WebauthnSerializerFactory($attestationStatementSupportManager))->create();
+        if (!$serializer instanceof NormalizerInterface ||
+            !$serializer instanceof DenormalizerInterface
+        ) {
+            throw new \RuntimeException('Expected WebauthnSerializerFactory to create a (de)normalizing serializer', 1777882044);
+        }
+
+        return $serializer;
     }
 
     private function createCeremonyStepManagerFactory(AttestationStatementSupportManager $attestationStatementSupportManager): CeremonyStepManagerFactory
