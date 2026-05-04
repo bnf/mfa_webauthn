@@ -38,6 +38,7 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AuthenticatorSelectionCriteria;
+use Webauthn\CredentialRecord;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialRequestOptions;
@@ -291,9 +292,10 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
         $credentialSources = $publicKeyCredentialSourceRepository->findAllForUserEntity($userEntity);
         // Convert the Credential Sources into Public Key Credential Descriptors
-        $excludeCredentials = array_map(function (PublicKeyCredentialSource $credential) {
-            return $credential->getPublicKeyCredentialDescriptor();
-        }, $credentialSources);
+        $excludeCredentials = array_map(
+            static fn (CredentialRecord $credential) => $credential->getPublicKeyCredentialDescriptor(),
+            $credentialSources
+        );
 
         $creationOptions = $webauthn->generatePublicKeyCredentialCreationOptions(
             $userEntity,
@@ -354,9 +356,10 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $credentialSources = $publicKeyCredentialSourceRepository->findAllForUserEntity($userEntity);
 
         // Convert the Credential Sources into Public Key Credential Descriptors
-        $allowedCredentials = array_map(function (PublicKeyCredentialSource $credential) {
-            return $credential->getPublicKeyCredentialDescriptor();
-        }, $credentialSources);
+        $allowedCredentials = array_map(
+            static fn(CredentialRecord $credential) => $credential->getPublicKeyCredentialDescriptor(),
+            $credentialSources
+        );
 
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
 
