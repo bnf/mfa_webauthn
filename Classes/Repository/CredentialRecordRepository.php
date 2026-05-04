@@ -26,10 +26,9 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Webauthn\CredentialRecord;
 use Webauthn\Denormalizer\CredentialRecordDenormalizer;
 use Webauthn\Denormalizer\TrustPathDenormalizer;
-use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
 
-class PublicKeyCredentialSourceRepository
+class CredentialRecordRepository
 {
     public const PROPERTY = 'publicKeyCredentialSources';
 
@@ -53,7 +52,7 @@ class PublicKeyCredentialSourceRepository
     /**
      * @param array<string, mixed> $source
      */
-    private function createPublicKeyCredentialSource(array $source): CredentialRecord
+    private function createCredentialRecord(array $source): CredentialRecord
     {
         return self::createSerializer()->denormalize($source, CredentialRecord::class);
     }
@@ -67,7 +66,7 @@ class PublicKeyCredentialSourceRepository
             return null;
         }
 
-        return $this->createPublicKeyCredentialSource($source);
+        return $this->createCredentialRecord($source);
     }
 
     /**
@@ -77,7 +76,7 @@ class PublicKeyCredentialSourceRepository
     {
         $sources = [];
         foreach ($this->load() as $data) {
-            $source = $this->createPublicKeyCredentialSource($data['publickey']);
+            $source = $this->createCredentialRecord($data['publickey']);
             if ($source->userHandle === $publicKeyCredentialUserEntity->id) {
                 $sources[] = $source;
             }
@@ -85,11 +84,11 @@ class PublicKeyCredentialSourceRepository
         return $sources;
     }
 
-    public function saveCredentialSource(CredentialRecord $publicKeyCredentialSource): void
+    public function saveCredentialRecord(CredentialRecord $credentialRecord): void
     {
-        $identifier = base64_encode($publicKeyCredentialSource->publicKeyCredentialId);
+        $identifier = base64_encode($credentialRecord->publicKeyCredentialId);
         /** @var array<string, mixed> $source */
-        $source = self::createSerializer()->normalize($publicKeyCredentialSource);
+        $source = self::createSerializer()->normalize($credentialRecord);
 
         $data = $this->load();
         $data[$identifier]['publickey'] = $source;
@@ -99,13 +98,13 @@ class PublicKeyCredentialSourceRepository
         $this->save($data);
     }
 
-    public function addCredentialSource(CredentialRecord $publicKeyCredentialSource, string $description, string $icon): void
+    public function addCredentialRecord(CredentialRecord $credentialRecord, string $description, string $icon): void
     {
-        $identifier = base64_encode($publicKeyCredentialSource->publicKeyCredentialId);
+        $identifier = base64_encode($credentialRecord->publicKeyCredentialId);
 
         $source = [];
         /** @var array<string, mixed> $publickey */
-        $publickey = self::createSerializer()->normalize($publicKeyCredentialSource);
+        $publickey = self::createSerializer()->normalize($credentialRecord);
         $source['publickey'] = $publickey;
         $source['description'] = $description;
         $source['icon'] = $icon;
@@ -118,9 +117,9 @@ class PublicKeyCredentialSourceRepository
         $this->save($data);
     }
 
-    public function removeCredentialSource(CredentialRecord $publicKeyCredentialSource): void
+    public function removeCredentialRecord(CredentialRecord $credentialRecord): void
     {
-        $identifier = base64_encode($publicKeyCredentialSource->publicKeyCredentialId);
+        $identifier = base64_encode($credentialRecord->publicKeyCredentialId);
 
         $data = $this->load();
         if (!isset($data[$identifier])) {

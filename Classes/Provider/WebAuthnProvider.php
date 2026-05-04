@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Bnf\MfaWebauthn\Provider;
 
-use Bnf\MfaWebauthn\Repository\PublicKeyCredentialSourceRepository;
+use Bnf\MfaWebauthn\Repository\CredentialRecordRepository;
 use Bnf\MfaWebauthn\Server;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -43,7 +43,6 @@ use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
-use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
 
 class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
@@ -93,7 +92,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     public function isActive(MfaProviderPropertyManager $propertyManager): bool
     {
         return (bool)$propertyManager->getProperty('active') &&
-            count($propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY) ?? []) > 0;
+            count($propertyManager->getProperty(CredentialRecordRepository::PROPERTY) ?? []) > 0;
     }
 
     public function isLocked(MfaProviderPropertyManager $propertyManager): bool
@@ -183,7 +182,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     private function addCredentials(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): bool
     {
         $data = $this->getPublicKey($request);
-        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager);
         $keyDescription = $this->getDescription($request);
         $keyIcon = $this->getIcon($request);
 
@@ -197,12 +196,12 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
 
         try {
-            $publicKeyCredentialSource = $webauthn->loadAndCheckAttestationResponse(
+            $credentialRecord = $webauthn->loadAndCheckAttestationResponse(
                 $data,
                 $creationOptions, // This one contains the challenge we stored during the previous step
                 $hostname
             );
-            $publicKeyCredentialSourceRepository->addCredentialSource($publicKeyCredentialSource, $keyDescription, $keyIcon);
+            $credentialRecordRepository->addCredentialRecord($credentialRecord, $keyDescription, $keyIcon);
 
         } catch (\Throwable $exception) {
             return false;
@@ -223,11 +222,11 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     private function removeCredentials(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): bool
     {
         $data = $this->getPublicKey($request);
-        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager);
         try {
             $sourceData = json_decode($data, true);
-            $credentialSource = $this->createSerializer()->denormalize($sourceData, PublicKeyCredentialSource::class);
-            $publicKeyCredentialSourceRepository->removeCredentialSource($credentialSource);
+            $credentialSource = $this->createSerializer()->denormalize($sourceData, CredentialRecord::class);
+            $credentialRecordRepository->removeCredentialRecord($credentialSource);
         } catch (\Throwable $e) {
             return false;
         }
@@ -253,7 +252,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $hostname = $this->getNormalizedParams($request)->getRequestHostOnly();
 
         try {
-            $publicKeyCredentialSource = $webauthn->loadAndCheckAssertionResponse(
+            $credentialRecord = $webauthn->loadAndCheckAssertionResponse(
                 $publicKey,
                 $publicKeyCredentialRequestOptions, // The options stored during the previous (prepareAuth) step
                 $userEntity,
@@ -289,8 +288,8 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
         $userEntity = $this->createUserEntity($propertyManager);
 
-        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
-        $credentialSources = $publicKeyCredentialSourceRepository->findAllForUserEntity($userEntity);
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager);
+        $credentialSources = $credentialRecordRepository->findAllForUserEntity($userEntity);
         // Convert the Credential Sources into Public Key Credential Descriptors
         $excludeCredentials = array_map(
             static fn (CredentialRecord $credential) => $credential->getPublicKeyCredentialDescriptor(),
@@ -313,7 +312,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             ? $propertyManager->updateProperties($properties)
             : $propertyManager->createProviderEntry($properties);
 
-        $keys = $propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY) ?? [];
+        $keys = $propertyManager->getProperty(CredentialRecordRepository::PROPERTY) ?? [];
 
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
         $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
@@ -350,10 +349,10 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             $propertyManager->getProperty('userEntity'),
             PublicKeyCredentialUserEntity::class
         );
-        $keys = $propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY);
+        $keys = $propertyManager->getProperty(CredentialRecordRepository::PROPERTY);
 
-        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
-        $credentialSources = $publicKeyCredentialSourceRepository->findAllForUserEntity($userEntity);
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager);
+        $credentialSources = $credentialRecordRepository->findAllForUserEntity($userEntity);
 
         // Convert the Credential Sources into Public Key Credential Descriptors
         $allowedCredentials = array_map(
@@ -437,7 +436,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
         $server = new Server(
             new PublicKeyCredentialRpEntity($name, $id),
-            new PublicKeyCredentialSourceRepository($propertyManager)
+            new CredentialRecordRepository($propertyManager)
         );
         if ($this->logger !== null) {
             $server->setLogger($this->logger);
