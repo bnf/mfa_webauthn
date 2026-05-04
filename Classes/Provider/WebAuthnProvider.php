@@ -24,6 +24,9 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderInterface;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderPropertyManager;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaViewType;
@@ -410,9 +413,16 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         return new PublicKeyCredentialUserEntity($userName, $uniqueid, $displayName);
     }
 
-    private function createSerializer(): \Symfony\Component\Serializer\SerializerInterface
+    private function createSerializer(): SerializerInterface&NormalizerInterface&DenormalizerInterface
     {
-        return (new WebauthnSerializerFactory(new AttestationStatementSupportManager()))->create();
+        $serializer = (new WebauthnSerializerFactory(new AttestationStatementSupportManager()))->create();
+        if (!$serializer instanceof NormalizerInterface ||
+            !$serializer instanceof DenormalizerInterface
+        ) {
+            throw new \RuntimeException('Expected WebauthnSerializerFactory to create a (de)normalizing serializer', 1777882044);
+        }
+
+        return $serializer;
     }
 
     private function createWebauthnServer(
