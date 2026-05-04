@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace Bnf\MfaWebauthn\Provider;
 
-use Bnf\MfaWebauthn\Repository\PublicKeyCredentialSourceRepository;
+use Bnf\MfaWebauthn\Repository\CredentialRecordRepository;
 use Bnf\MfaWebauthn\Server;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -29,18 +29,16 @@ use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderPropertyManager;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaViewType;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Core\Environment;
-use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Http\NormalizedParams;
 use TYPO3\CMS\Core\Page\PageRenderer;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AuthenticatorSelectionCriteria;
-use Webauthn\Denormalizer\WebauthnSerializerFactory;
+use Webauthn\CredentialRecord;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
-use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
 
 class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
@@ -89,8 +87,12 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
     public function isActive(MfaProviderPropertyManager $propertyManager): bool
     {
-        return (bool)$propertyManager->getProperty('active') &&
-            count($propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY) ?? []) > 0;
+        if (!(bool)$propertyManager->getProperty('active')) {
+            return false;
+        }
+        /** @var array<mixed> */
+        $credentialRecords = $propertyManager->getProperty(CredentialRecordRepository::PROPERTY) ?? [];
+        return count($credentialRecords) > 0;
     }
 
     public function isLocked(MfaProviderPropertyManager $propertyManager): bool
@@ -180,26 +182,26 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     private function addCredentials(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): bool
     {
         $data = $this->getPublicKey($request);
-        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
+        $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $serializer = $webauthn->getSerializer();
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager, $serializer);
         $keyDescription = $this->getDescription($request);
         $keyIcon = $this->getIcon($request);
 
-        $serializer = $this->createSerializer();
         $creationOptions = $serializer->denormalize(
             $propertyManager->getProperty('creationOptions'),
             PublicKeyCredentialCreationOptions::class
         );
         $hostname = $this->getNormalizedParams($request)->getRequestHostOnly();
 
-        $webauthn = $this->createWebauthnServer($request, $propertyManager);
 
         try {
-            $publicKeyCredentialSource = $webauthn->loadAndCheckAttestationResponse(
+            $credentialRecord = $webauthn->loadAndCheckAttestationResponse(
                 $data,
                 $creationOptions, // This one contains the challenge we stored during the previous step
                 $hostname
             );
-            $publicKeyCredentialSourceRepository->addCredentialSource($publicKeyCredentialSource, $keyDescription, $keyIcon);
+            $credentialRecordRepository->addCredentialRecord($credentialRecord, $keyDescription, $keyIcon);
 
         } catch (\Throwable $exception) {
             return false;
@@ -220,11 +222,13 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     private function removeCredentials(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): bool
     {
         $data = $this->getPublicKey($request);
-        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
+        $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $serializer = $webauthn->getSerializer();
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager, $serializer);
         try {
             $sourceData = json_decode($data, true);
-            $credentialSource = $this->createSerializer()->denormalize($sourceData, PublicKeyCredentialSource::class);
-            $publicKeyCredentialSourceRepository->removeCredentialSource($credentialSource);
+            $credentialSource = $serializer->denormalize($sourceData, CredentialRecord::class);
+            $credentialRecordRepository->removeCredentialRecord($credentialSource);
         } catch (\Throwable $e) {
             return false;
         }
@@ -235,7 +239,9 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     {
         $publicKey = $this->getPublicKey($request);
 
-        $serializer = $this->createSerializer();
+        $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $serializer = $webauthn->getSerializer();
+
         $userEntity = $serializer->denormalize(
             $propertyManager->getProperty('userEntity'),
             PublicKeyCredentialUserEntity::class
@@ -246,11 +252,10 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             PublicKeyCredentialRequestOptions::class
         );
 
-        $webauthn = $this->createWebauthnServer($request, $propertyManager);
         $hostname = $this->getNormalizedParams($request)->getRequestHostOnly();
 
         try {
-            $publicKeyCredentialSource = $webauthn->loadAndCheckAssertionResponse(
+            $credentialRecord = $webauthn->loadAndCheckAssertionResponse(
                 $publicKey,
                 $publicKeyCredentialRequestOptions, // The options stored during the previous (prepareAuth) step
                 $userEntity,
@@ -278,6 +283,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         MfaViewType|string $type
     ): string {
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $serializer = $webauthn->getSerializer();
 
         $authenticatorSelectionCriteria = new AuthenticatorSelectionCriteria(
             $this->authenticatorAttachment,
@@ -286,12 +292,13 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
         $userEntity = $this->createUserEntity($propertyManager);
 
-        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
-        $credentialSources = $publicKeyCredentialSourceRepository->findAllForUserEntity($userEntity);
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager, $serializer);
+        $credentialSources = $credentialRecordRepository->findAllForUserEntity($userEntity);
         // Convert the Credential Sources into Public Key Credential Descriptors
-        $excludeCredentials = array_map(function (PublicKeyCredentialSource $credential) {
-            return $credential->getPublicKeyCredentialDescriptor();
-        }, $credentialSources);
+        $excludeCredentials = array_map(
+            static fn (CredentialRecord $credential) => $credential->getPublicKeyCredentialDescriptor(),
+            $credentialSources
+        );
 
         $creationOptions = $webauthn->generatePublicKeyCredentialCreationOptions(
             $userEntity,
@@ -300,7 +307,6 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             $authenticatorSelectionCriteria
         );
 
-        $serializer = $this->createSerializer();
         $properties = [
             'creationOptions' => $serializer->normalize($creationOptions),
             'userEntity' => $serializer->normalize($userEntity),
@@ -309,14 +315,11 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             ? $propertyManager->updateProperties($properties)
             : $propertyManager->createProviderEntry($properties);
 
-        $keys = $propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY) ?? [];
+        /** @var array<mixed> $keys */
+        $keys = $propertyManager->getProperty(CredentialRecordRepository::PROPERTY) ?? [];
 
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        if ((new Typo3Version())->getMajorVersion() >= 12) {
-            $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
-        } else {
-            $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthn');
-        }
+        $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
 
         $labels = [
             'singular' => 'security key',
@@ -332,35 +335,38 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             ];
         }
 
+        /** @var array<mixed> $credentialCreationOptions */
+        $credentialCreationOptions = $serializer->normalize($creationOptions);
         return $this->renderHtmlTag(
             'mfa-webauthn-setup',
             [
-                'credential-creation-options' => $serializer->normalize($creationOptions),
+                'credential-creation-options' => $credentialCreationOptions,
                 'credentials' => $keys,
                 'mode' => $type,
                 'labels' => $labels,
-                'locked' => $this->isLocked($propertyManager),
             ]
         );
     }
 
     private function prepareAuth(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): string
     {
-        $userEntity = $this->createSerializer()->denormalize(
+        $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $serializer = $webauthn->getSerializer();
+
+        $userEntity = $serializer->denormalize(
             $propertyManager->getProperty('userEntity'),
             PublicKeyCredentialUserEntity::class
         );
-        $keys = $propertyManager->getProperty(PublicKeyCredentialSourceRepository::PROPERTY);
+        $keys = $propertyManager->getProperty(CredentialRecordRepository::PROPERTY);
 
-        $publicKeyCredentialSourceRepository = new PublicKeyCredentialSourceRepository($propertyManager);
-        $credentialSources = $publicKeyCredentialSourceRepository->findAllForUserEntity($userEntity);
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager, $serializer);
+        $credentialSources = $credentialRecordRepository->findAllForUserEntity($userEntity);
 
         // Convert the Credential Sources into Public Key Credential Descriptors
-        $allowedCredentials = array_map(function (PublicKeyCredentialSource $credential) {
-            return $credential->getPublicKeyCredentialDescriptor();
-        }, $credentialSources);
-
-        $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $allowedCredentials = array_map(
+            static fn(CredentialRecord $credential) => $credential->getPublicKeyCredentialDescriptor(),
+            $credentialSources
+        );
 
         // We generate the set of options.
         $publicKeyCredentialRequestOptions = $webauthn->generatePublicKeyCredentialRequestOptions(
@@ -369,41 +375,51 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         );
 
         $propertyManager->updateProperties([
-            'lastRequest' => $this->createSerializer()->normalize($publicKeyCredentialRequestOptions),
+            'lastRequest' => $serializer->normalize($publicKeyCredentialRequestOptions),
         ]);
 
         // @todo: Detect FE
         $pageRenderer = GeneralUtility::makeInstance(PageRenderer::class);
-        if ((new Typo3Version())->getMajorVersion() >= 12) {
-            $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
-        } else {
-            $pageRenderer->loadRequireJsModule('TYPO3/CMS/MfaWebauthn/MfaWebAuthn');
-        }
+        $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
 
+        /** @var array<mixed> $credentialRequestOptions */
+        $credentialRequestOptions = $serializer->normalize($publicKeyCredentialRequestOptions);
         return $this->renderHtmlTag('mfa-webauthn-authenticator', [
-            'credential-request-options' => $this->createSerializer()->normalize($publicKeyCredentialRequestOptions),
-            'locked' => $this->isLocked($propertyManager),
+            'credential-request-options' => $credentialRequestOptions,
         ]);
     }
 
     private function getAction(ServerRequestInterface $request): string
     {
-        return trim((string)($request->getQueryParams()['webauthn_action'] ?? $request->getParsedBody()['webauthn_action'] ?? ''));
+        return $this->getRequestData($request, 'action');
     }
 
     private function getPublicKey(ServerRequestInterface $request): string
     {
-        return trim((string)($request->getQueryParams()['webauthn_publicKeyCredential'] ?? $request->getParsedBody()['webauthn_publicKeyCredential'] ?? ''));
+        return $this->getRequestData($request, 'publicKeyCredential');
     }
 
     private function getDescription(ServerRequestInterface $request): string
     {
-        return trim((string)($request->getQueryParams()['webauthn_publicKeyDescription'] ?? $request->getParsedBody()['webauthn_publicKeyDescription'] ?? ''));
+        return $this->getRequestData($request, 'publicKeyDescription');
     }
 
     private function getIcon(ServerRequestInterface $request): string
     {
-        return trim((string)($request->getQueryParams()['webauthn_publicKeyIcon'] ?? $request->getParsedBody()['webauthn_publicKeyIcon'] ?? ''));
+        return $this->getRequestData($request, 'publicKeyIcon');
+    }
+
+    private function getRequestData(ServerRequestInterface $request, string $identifier): string
+    {
+        $index = 'webauthn_' . $identifier;
+        if (isset($request->getQueryParams()[$index])) {
+            return trim((string)$request->getQueryParams()[$index]);
+        }
+        $body = $request->getParsedBody();
+        if (!is_array($body) || !isset($body[$index])) {
+            return '';
+        }
+        return trim((string)$body[$index]);
     }
 
     private function createUserEntity(MfaProviderPropertyManager $propertyManager): PublicKeyCredentialUserEntity
@@ -419,11 +435,6 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         return new PublicKeyCredentialUserEntity($userName, $uniqueid, $displayName);
     }
 
-    private function createSerializer(): \Symfony\Component\Serializer\SerializerInterface
-    {
-        return (new WebauthnSerializerFactory(new AttestationStatementSupportManager()))->create();
-    }
-
     private function createWebauthnServer(
         ServerRequestInterface $request,
         MfaProviderPropertyManager $propertyManager
@@ -431,29 +442,35 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $name = 'TYPO3 Backend';
         $id = $this->getNormalizedParams($request)->getRequestHostOnly();
 
-        $server = new Server(
-            new PublicKeyCredentialRpEntity($name, $id),
-            new PublicKeyCredentialSourceRepository($propertyManager)
-        );
-        if ($this->logger !== null) {
-            $server->setLogger($this->logger);
-        }
-
+        $allowedOrigins = [];
         if (preg_match('/^(.+\.)?localhost$/', $id)) {
             // Marks 'localhost' and *.localhost as secure
-            // relying party ID (helps for local testing
-            $server->setSecuredRelyingPartyId([$id]);
+            $allowedOrigins = ['localhost'];
         }
+
+        $server = new Server(
+            new PublicKeyCredentialRpEntity($name, $id),
+            $allowedOrigins,
+            $this->logger,
+        );
+        $serializer = $server->getSerializer();
+        $repository = new CredentialRecordRepository($propertyManager, $serializer);
+        $server->setCredentialRecordRepository($repository);
 
         return $server;
     }
 
+    /**
+     * @param array<string, string|int|float|array<mixed>|ArrayObject<mixed>|object> $attributes
+     */
     private function renderHtmlTag(string $tagName, array $attributes = [], string $content = ''): string
     {
         $unescaped = [];
         foreach ($attributes as $name => $value) {
             if (is_object($value) || is_array($value)) {
                 $value = GeneralUtility::jsonEncodeForHtmlAttribute($value, false);
+            } else {
+                $value = (string)$value;
             }
             $unescaped[$name] = $value;
         }

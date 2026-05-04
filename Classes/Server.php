@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Bnf\MfaWebauthn;
 
-use Bnf\MfaWebauthn\Repository\PublicKeyCredentialSourceRepository;
+use Bnf\MfaWebauthn\Repository\CredentialRecordRepository;
 use Cose\Algorithm\Algorithm;
 use Cose\Algorithm\ManagerFactory;
 use Cose\Algorithm\Signature\ECDSA;
@@ -21,6 +21,9 @@ use Cose\Algorithm\Signature\EdDSA;
 use Cose\Algorithm\Signature\RSA;
 use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Webauthn\AttestationStatement\AndroidKeyAttestationStatementSupport;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AttestationStatement\FidoU2FAttestationStatementSupport;
@@ -34,6 +37,7 @@ use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\AuthenticatorAttestationResponseValidator;
 use Webauthn\AuthenticatorSelectionCriteria;
 use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
+use Webauthn\CredentialRecord;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialCreationOptions;
@@ -41,26 +45,20 @@ use Webauthn\PublicKeyCredentialDescriptor;
 use Webauthn\PublicKeyCredentialParameters;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
-use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
 
 
 class Server
 {
     /**
-     * @var int
+     * @var positive-int
      */
-    public $timeout = 60000;
+    public int $timeout = 60000;
 
     /**
-     * @var int<1, max>
+     * @var positive-int
      */
-    public $challengeSize = 32;
-
-    /**
-     * @var PublicKeyCredentialRpEntity
-     */
-    private $rpEntity;
+    public int $challengeSize = 32;
 
     /**
      * @var ManagerFactory
@@ -68,9 +66,9 @@ class Server
     private $coseAlgorithmManagerFactory;
 
     /**
-     * @var PublicKeyCredentialSourceRepository
+     * @var CredentialRecordRepository
      */
-    private $publicKeyCredentialSourceRepository;
+    private $credentialRecordRepository;
 
     /**
      * @var ExtensionOutputCheckerHandler
@@ -82,20 +80,12 @@ class Server
      */
     private $selectedAlgorithms;
 
-    /**
-     * @var LoggerInterface|null
-     */
-    private $logger;
-
-    /**
-     * @var string[]
-     */
-    private $securedRelyingPartyId = [];
-
-    public function __construct(PublicKeyCredentialRpEntity $relyingParty, PublicKeyCredentialSourceRepository $publicKeyCredentialSourceRepository)
-    {
-        $this->rpEntity = $relyingParty;
-
+    public function __construct(
+        private readonly PublicKeyCredentialRpEntity $rpEntity,
+        /** @var list<string> */
+        private readonly array $allowedOrigins,
+        private ?LoggerInterface $logger,
+    ) {
         $this->coseAlgorithmManagerFactory = new ManagerFactory();
         $this->coseAlgorithmManagerFactory->add('RS1', new RSA\RS1());
         $this->coseAlgorithmManagerFactory->add('RS256', new RSA\RS256());
@@ -111,8 +101,17 @@ class Server
         $this->coseAlgorithmManagerFactory->add('Ed25519', new EdDSA\Ed25519());
 
         $this->selectedAlgorithms = ['RS256', 'RS512', 'PS256', 'PS512', 'ES256', 'ES512', 'Ed25519'];
-        $this->publicKeyCredentialSourceRepository = $publicKeyCredentialSourceRepository;
         $this->extensionOutputCheckerHandler = new ExtensionOutputCheckerHandler();
+    }
+
+    public function getCredentialRecordRepository(): CredentialRecordRepository
+    {
+        return $this->credentialRecordRepository;
+    }
+
+    public function setCredentialRecordRepository(CredentialRecordRepository $credentialRecordRepository): void
+    {
+        $this->credentialRecordRepository = $credentialRecordRepository;
     }
 
     /**
@@ -139,20 +138,6 @@ class Server
         $this->extensionOutputCheckerHandler = $extensionOutputCheckerHandler;
 
         return $this;
-    }
-
-    /**
-     * @param string[] $securedRelyingPartyId
-     */
-    public function setSecuredRelyingPartyId(array $securedRelyingPartyId): void
-    {
-        $count = count($securedRelyingPartyId);
-        if ($count === 0 || count($securedRelyingPartyId) !== count(array_filter($securedRelyingPartyId, fn ($value): bool => is_string($value)))) {
-            throw new InvalidArgumentException(
-                'Invalid list. Shall be a list of strings'
-            );
-        }
-        $this->securedRelyingPartyId = $securedRelyingPartyId;
     }
 
     /**
@@ -197,11 +182,11 @@ class Server
         );
     }
 
-    public function loadAndCheckAttestationResponse(string $data, PublicKeyCredentialCreationOptions $publicKeyCredentialCreationOptions, string $hostname): PublicKeyCredentialSource
+    public function loadAndCheckAttestationResponse(string $data, PublicKeyCredentialCreationOptions $publicKeyCredentialCreationOptions, string $hostname): CredentialRecord
     {
         $attestationStatementSupportManager = $this->getAttestationStatementSupportManager();
-        $serializer = (new WebauthnSerializerFactory($attestationStatementSupportManager))->create();
 
+        $serializer = $this->getSerializer($attestationStatementSupportManager);
         $publicKeyCredential = $serializer->deserialize($data, PublicKeyCredential::class, 'json');
         $authenticatorResponse = $publicKeyCredential->response;
         $authenticatorResponse instanceof AuthenticatorAttestationResponse || throw new \InvalidArgumentException('Not an authenticator attestation response');
@@ -217,16 +202,16 @@ class Server
         return $authenticatorAttestationResponseValidator->check($authenticatorResponse, $publicKeyCredentialCreationOptions, $hostname);
     }
 
-    public function loadAndCheckAssertionResponse(string $data, PublicKeyCredentialRequestOptions $publicKeyCredentialRequestOptions, ?PublicKeyCredentialUserEntity $userEntity, string $hostname): PublicKeyCredentialSource
+    public function loadAndCheckAssertionResponse(string $data, PublicKeyCredentialRequestOptions $publicKeyCredentialRequestOptions, ?PublicKeyCredentialUserEntity $userEntity, string $hostname): CredentialRecord
     {
         $attestationStatementSupportManager = $this->getAttestationStatementSupportManager();
-        $serializer = (new WebauthnSerializerFactory($attestationStatementSupportManager))->create();
+        $serializer = $this->getSerializer($attestationStatementSupportManager);
 
         $publicKeyCredential = $serializer->deserialize($data, PublicKeyCredential::class, 'json');
         $authenticatorResponse = $publicKeyCredential->response;
         $authenticatorResponse instanceof AuthenticatorAssertionResponse || throw new InvalidArgumentException('Not an authenticator assertion response');
 
-        $credentialSource = $this->publicKeyCredentialSourceRepository->findOneByCredentialId($publicKeyCredential->rawId);
+        $credentialSource = $this->credentialRecordRepository->findOneByCredentialId($publicKeyCredential->rawId);
         $credentialSource !== null || throw new InvalidArgumentException('Credential source not found');
 
         $ceremonyStepManagerFactory = $this->createCeremonyStepManagerFactory($attestationStatementSupportManager);
@@ -237,21 +222,29 @@ class Server
             $authenticatorAssertionResponseValidator->setLogger($this->logger);
         }
 
-        $updatedCredentialSource = $authenticatorAssertionResponseValidator->check(
+        $updatedCredentialRecord = $authenticatorAssertionResponseValidator->check(
             $credentialSource,
             $authenticatorResponse,
             $publicKeyCredentialRequestOptions,
             $hostname,
             $userEntity?->id,
         );
-        $this->publicKeyCredentialSourceRepository->saveCredentialSource($updatedCredentialSource);
+        $this->credentialRecordRepository->saveCredentialRecord($updatedCredentialRecord);
 
-        return $updatedCredentialSource;
+        return $updatedCredentialRecord;
     }
 
-    public function setLogger(LoggerInterface $logger): void
+    public function getSerializer(?AttestationStatementSupportManager $attestationStatementSupportManager = null): SerializerInterface&NormalizerInterface&DenormalizerInterface
     {
-        $this->logger = $logger;
+        $attestationStatementSupportManager ??= $this->getAttestationStatementSupportManager();
+        $serializer = (new WebauthnSerializerFactory($attestationStatementSupportManager))->create();
+        if (!$serializer instanceof NormalizerInterface ||
+            !$serializer instanceof DenormalizerInterface
+        ) {
+            throw new \RuntimeException('Expected WebauthnSerializerFactory to create a (de)normalizing serializer', 1777882044);
+        }
+
+        return $serializer;
     }
 
     private function createCeremonyStepManagerFactory(AttestationStatementSupportManager $attestationStatementSupportManager): CeremonyStepManagerFactory
@@ -260,8 +253,8 @@ class Server
         $factory->setAlgorithmManager($this->coseAlgorithmManagerFactory->generate(...$this->selectedAlgorithms));
         $factory->setAttestationStatementSupportManager($attestationStatementSupportManager);
         $factory->setExtensionOutputCheckerHandler($this->extensionOutputCheckerHandler);
-        if ($this->securedRelyingPartyId !== []) {
-            $factory->setSecuredRelyingPartyId($this->securedRelyingPartyId);
+        if ($this->allowedOrigins !== []) {
+            $factory->setAllowedOrigins($this->allowedOrigins, true);
         }
         return $factory;
     }
