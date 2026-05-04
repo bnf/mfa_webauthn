@@ -34,6 +34,7 @@ use Webauthn\AuthenticatorAttestationResponse;
 use Webauthn\AuthenticatorAttestationResponseValidator;
 use Webauthn\AuthenticatorSelectionCriteria;
 use Webauthn\CeremonyStep\CeremonyStepManagerFactory;
+use Webauthn\CredentialRecord;
 use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\PublicKeyCredential;
 use Webauthn\PublicKeyCredentialCreationOptions;
@@ -41,21 +42,21 @@ use Webauthn\PublicKeyCredentialDescriptor;
 use Webauthn\PublicKeyCredentialParameters;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
-use Webauthn\PublicKeyCredentialSource;
+//use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
 
 
 class Server
 {
     /**
-     * @var int
+     * @var positive-int
      */
-    public $timeout = 60000;
+    public int $timeout = 60000;
 
     /**
-     * @var int<1, max>
+     * @var positive-int
      */
-    public $challengeSize = 32;
+    public int $challengeSize = 32;
 
     /**
      * @var PublicKeyCredentialRpEntity
@@ -197,7 +198,7 @@ class Server
         );
     }
 
-    public function loadAndCheckAttestationResponse(string $data, PublicKeyCredentialCreationOptions $publicKeyCredentialCreationOptions, string $hostname): PublicKeyCredentialSource
+    public function loadAndCheckAttestationResponse(string $data, PublicKeyCredentialCreationOptions $publicKeyCredentialCreationOptions, string $hostname): CredentialRecord
     {
         $attestationStatementSupportManager = $this->getAttestationStatementSupportManager();
         $serializer = (new WebauthnSerializerFactory($attestationStatementSupportManager))->create();
@@ -217,7 +218,7 @@ class Server
         return $authenticatorAttestationResponseValidator->check($authenticatorResponse, $publicKeyCredentialCreationOptions, $hostname);
     }
 
-    public function loadAndCheckAssertionResponse(string $data, PublicKeyCredentialRequestOptions $publicKeyCredentialRequestOptions, ?PublicKeyCredentialUserEntity $userEntity, string $hostname): PublicKeyCredentialSource
+    public function loadAndCheckAssertionResponse(string $data, PublicKeyCredentialRequestOptions $publicKeyCredentialRequestOptions, ?PublicKeyCredentialUserEntity $userEntity, string $hostname): CredentialRecord
     {
         $attestationStatementSupportManager = $this->getAttestationStatementSupportManager();
         $serializer = (new WebauthnSerializerFactory($attestationStatementSupportManager))->create();

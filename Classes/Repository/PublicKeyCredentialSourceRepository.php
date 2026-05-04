@@ -23,7 +23,8 @@ use Symfony\Component\Serializer\Serializer;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderPropertyManager;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use Webauthn\Denormalizer\PublicKeyCredentialSourceDenormalizer;
+use Webauthn\CredentialRecord;
+use Webauthn\Denormalizer\CredentialRecordDenormalizer;
 use Webauthn\Denormalizer\TrustPathDenormalizer;
 use Webauthn\PublicKeyCredentialSource;
 use Webauthn\PublicKeyCredentialUserEntity;
@@ -42,19 +43,22 @@ class PublicKeyCredentialSourceRepository
     private static function createSerializer(): Serializer
     {
         return new Serializer([
-            new PublicKeyCredentialSourceDenormalizer(),
+            new CredentialRecordDenormalizer(),
             new TrustPathDenormalizer(),
             new UidNormalizer(),
             new ArrayDenormalizer(),
         ]);
     }
 
-    private function createPublicKeyCredentialSource(array $source): PublicKeyCredentialSource
+    /**
+     * @param array<string, mixed> $source
+     */
+    private function createPublicKeyCredentialSource(array $source): CredentialRecord
     {
-        return self::createSerializer()->denormalize($source, PublicKeyCredentialSource::class);
+        return self::createSerializer()->denormalize($source, CredentialRecord::class);
     }
 
-    public function findOneByCredentialId(string $publicKeyCredentialId): ?PublicKeyCredentialSource
+    public function findOneByCredentialId(string $publicKeyCredentialId): ?CredentialRecord
     {
         $data = $this->load();
         $identifier = base64_encode($publicKeyCredentialId);
@@ -67,7 +71,7 @@ class PublicKeyCredentialSourceRepository
     }
 
     /**
-     * @return PublicKeyCredentialSource[]
+     * @return CredentialRecord[]
      */
     public function findAllForUserEntity(PublicKeyCredentialUserEntity $publicKeyCredentialUserEntity): array
     {
@@ -81,33 +85,40 @@ class PublicKeyCredentialSourceRepository
         return $sources;
     }
 
-    public function saveCredentialSource(PublicKeyCredentialSource $publicKeyCredentialSource): void
+    public function saveCredentialSource(CredentialRecord $publicKeyCredentialSource): void
     {
         $identifier = base64_encode($publicKeyCredentialSource->publicKeyCredentialId);
+        /** @var array<string, mixed> $source */
         $source = self::createSerializer()->normalize($publicKeyCredentialSource);
 
         $data = $this->load();
         $data[$identifier]['publickey'] = $source;
-        $data[$identifier]['updated'] = GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('date', 'timestamp');
+        /** @var int $timestamp */
+        $timestamp = GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('date', 'timestamp');
+        $data[$identifier]['updated'] = $timestamp;
         $this->save($data);
     }
 
-    public function addCredentialSource(PublicKeyCredentialSource $publicKeyCredentialSource, string $description, string $icon): void
+    public function addCredentialSource(CredentialRecord $publicKeyCredentialSource, string $description, string $icon): void
     {
         $identifier = base64_encode($publicKeyCredentialSource->publicKeyCredentialId);
 
         $source = [];
-        $source['publickey'] = self::createSerializer()->normalize($publicKeyCredentialSource);
+        /** @var array<string, mixed> $publickey */
+        $publickey = self::createSerializer()->normalize($publicKeyCredentialSource);
+        $source['publickey'] = $publickey;
         $source['description'] = $description;
         $source['icon'] = $icon;
-        $source['created'] = GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('date', 'timestamp');
+        /** @var int $timestamp */
+        $timestamp = GeneralUtility::makeInstance(Context::class)->getPropertyFromAspect('date', 'timestamp');
+        $source['created'] = $timestamp;
 
         $data = $this->load();
         $data[$identifier] = $source;
         $this->save($data);
     }
 
-    public function removeCredentialSource(PublicKeyCredentialSource $publicKeyCredentialSource): void
+    public function removeCredentialSource(CredentialRecord $publicKeyCredentialSource): void
     {
         $identifier = base64_encode($publicKeyCredentialSource->publicKeyCredentialId);
 
@@ -119,11 +130,19 @@ class PublicKeyCredentialSourceRepository
         $this->save($data);
     }
 
+    /**
+     * @return array<string, array{publickey: array<string, mixed>, description?: string, icon?: string, created?: int, updated?: int}>
+     */
     private function load(): array
     {
-        return $this->propertyManager->getProperty(self::PROPERTY) ?? [];
+        /** @var array<string, array{publickey: array<string, mixed>, description?: string, icon?: string, created?: int, updated?: int}> $data */
+        $data = $this->propertyManager->getProperty(self::PROPERTY) ?? [];
+        return $data;
     }
 
+    /**
+     * @param array<string, array{publickey: array<string, mixed>, description?: string, icon?: string, created?: int, updated?: int}> $data
+     */
     private function save(array $data): void
     {
         $properties = [self::PROPERTY => $data];
