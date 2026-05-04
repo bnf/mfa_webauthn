@@ -61,11 +61,6 @@ class Server
     public int $challengeSize = 32;
 
     /**
-     * @var PublicKeyCredentialRpEntity
-     */
-    private $rpEntity;
-
-    /**
      * @var ManagerFactory
      */
     private $coseAlgorithmManagerFactory;
@@ -85,21 +80,12 @@ class Server
      */
     private $selectedAlgorithms;
 
-    /**
-     * @var LoggerInterface|null
-     */
-    private $logger;
-
-    /**
-     * @var string[]
-     */
-    private $securedRelyingPartyId = [];
-
     public function __construct(
-        PublicKeyCredentialRpEntity $relyingParty,
+        private readonly PublicKeyCredentialRpEntity $rpEntity,
+        /** @var list<string> */
+        private readonly array $allowedOrigins,
+        private ?LoggerInterface $logger,
     ) {
-        $this->rpEntity = $relyingParty;
-
         $this->coseAlgorithmManagerFactory = new ManagerFactory();
         $this->coseAlgorithmManagerFactory->add('RS1', new RSA\RS1());
         $this->coseAlgorithmManagerFactory->add('RS256', new RSA\RS256());
@@ -152,20 +138,6 @@ class Server
         $this->extensionOutputCheckerHandler = $extensionOutputCheckerHandler;
 
         return $this;
-    }
-
-    /**
-     * @param string[] $securedRelyingPartyId
-     */
-    public function setSecuredRelyingPartyId(array $securedRelyingPartyId): void
-    {
-        $count = count($securedRelyingPartyId);
-        if ($count === 0 || count($securedRelyingPartyId) !== count(array_filter($securedRelyingPartyId, fn ($value): bool => is_string($value)))) {
-            throw new InvalidArgumentException(
-                'Invalid list. Shall be a list of strings'
-            );
-        }
-        $this->securedRelyingPartyId = $securedRelyingPartyId;
     }
 
     /**
@@ -262,11 +234,6 @@ class Server
         return $updatedCredentialRecord;
     }
 
-    public function setLogger(LoggerInterface $logger): void
-    {
-        $this->logger = $logger;
-    }
-
     public function getSerializer(?AttestationStatementSupportManager $attestationStatementSupportManager = null): SerializerInterface&NormalizerInterface&DenormalizerInterface
     {
         $attestationStatementSupportManager ??= $this->getAttestationStatementSupportManager();
@@ -286,8 +253,8 @@ class Server
         $factory->setAlgorithmManager($this->coseAlgorithmManagerFactory->generate(...$this->selectedAlgorithms));
         $factory->setAttestationStatementSupportManager($attestationStatementSupportManager);
         $factory->setExtensionOutputCheckerHandler($this->extensionOutputCheckerHandler);
-        if ($this->securedRelyingPartyId !== []) {
-            $factory->setSecuredRelyingPartyId($this->securedRelyingPartyId);
+        if ($this->allowedOrigins !== []) {
+            $factory->setAllowedOrigins($this->allowedOrigins, true);
         }
         return $factory;
     }
