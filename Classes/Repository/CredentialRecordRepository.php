@@ -17,44 +17,29 @@ declare(strict_types=1);
 
 namespace Bnf\MfaWebauthn\Repository;
 
-use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
-use Symfony\Component\Serializer\Normalizer\UidNormalizer;
-use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderPropertyManager;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use Webauthn\CredentialRecord;
-use Webauthn\Denormalizer\CredentialRecordDenormalizer;
-use Webauthn\Denormalizer\TrustPathDenormalizer;
 use Webauthn\PublicKeyCredentialUserEntity;
 
 class CredentialRecordRepository
 {
     public const PROPERTY = 'publicKeyCredentialSources';
 
-    private MfaProviderPropertyManager $propertyManager;
-
-    public function __construct(MfaProviderPropertyManager $mfaProviderPropertyManager)
-    {
-        $this->propertyManager = $mfaProviderPropertyManager;
-    }
-
-    private static function createSerializer(): Serializer
-    {
-        return new Serializer([
-            new CredentialRecordDenormalizer(),
-            new TrustPathDenormalizer(),
-            new UidNormalizer(),
-            new ArrayDenormalizer(),
-        ]);
-    }
+    public function __construct(
+        private readonly MfaProviderPropertyManager $propertyManager,
+        private readonly DenormalizerInterface&NormalizerInterface $normalizer,
+    ) {}
 
     /**
      * @param array<string, mixed> $source
      */
     private function createCredentialRecord(array $source): CredentialRecord
     {
-        return self::createSerializer()->denormalize($source, CredentialRecord::class);
+        return $this->normalizer->denormalize($source, CredentialRecord::class);
     }
 
     public function findOneByCredentialId(string $publicKeyCredentialId): ?CredentialRecord
@@ -88,7 +73,7 @@ class CredentialRecordRepository
     {
         $identifier = base64_encode($credentialRecord->publicKeyCredentialId);
         /** @var array<string, mixed> $source */
-        $source = self::createSerializer()->normalize($credentialRecord);
+        $source = $this->normalizer->normalize($credentialRecord);
 
         $data = $this->load();
         $data[$identifier]['publickey'] = $source;
@@ -104,7 +89,7 @@ class CredentialRecordRepository
 
         $source = [];
         /** @var array<string, mixed> $publickey */
-        $publickey = self::createSerializer()->normalize($credentialRecord);
+        $publickey = $this->normalizer->normalize($credentialRecord);
         $source['publickey'] = $publickey;
         $source['description'] = $description;
         $source['icon'] = $icon;

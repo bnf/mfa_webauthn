@@ -24,9 +24,6 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\Serializer\SerializerInterface;
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderInterface;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaProviderPropertyManager;
 use TYPO3\CMS\Core\Authentication\Mfa\MfaViewType;
@@ -39,7 +36,6 @@ use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 use Webauthn\AttestationStatement\AttestationStatementSupportManager;
 use Webauthn\AuthenticatorSelectionCriteria;
 use Webauthn\CredentialRecord;
-use Webauthn\Denormalizer\WebauthnSerializerFactory;
 use Webauthn\PublicKeyCredentialCreationOptions;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
@@ -182,18 +178,18 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     private function addCredentials(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): bool
     {
         $data = $this->getPublicKey($request);
-        $credentialRecordRepository = new CredentialRecordRepository($propertyManager);
+        $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $serializer = $webauthn->getSerializer();
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager, $serializer);
         $keyDescription = $this->getDescription($request);
         $keyIcon = $this->getIcon($request);
 
-        $serializer = $this->createSerializer();
         $creationOptions = $serializer->denormalize(
             $propertyManager->getProperty('creationOptions'),
             PublicKeyCredentialCreationOptions::class
         );
         $hostname = $this->getNormalizedParams($request)->getRequestHostOnly();
 
-        $webauthn = $this->createWebauthnServer($request, $propertyManager);
 
         try {
             $credentialRecord = $webauthn->loadAndCheckAttestationResponse(
@@ -222,10 +218,12 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     private function removeCredentials(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): bool
     {
         $data = $this->getPublicKey($request);
-        $credentialRecordRepository = new CredentialRecordRepository($propertyManager);
+        $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $serializer = $webauthn->getSerializer();
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager, $serializer);
         try {
             $sourceData = json_decode($data, true);
-            $credentialSource = $this->createSerializer()->denormalize($sourceData, CredentialRecord::class);
+            $credentialSource = $serializer->denormalize($sourceData, CredentialRecord::class);
             $credentialRecordRepository->removeCredentialRecord($credentialSource);
         } catch (\Throwable $e) {
             return false;
@@ -237,7 +235,9 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
     {
         $publicKey = $this->getPublicKey($request);
 
-        $serializer = $this->createSerializer();
+        $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $serializer = $webauthn->getSerializer();
+
         $userEntity = $serializer->denormalize(
             $propertyManager->getProperty('userEntity'),
             PublicKeyCredentialUserEntity::class
@@ -248,7 +248,6 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             PublicKeyCredentialRequestOptions::class
         );
 
-        $webauthn = $this->createWebauthnServer($request, $propertyManager);
         $hostname = $this->getNormalizedParams($request)->getRequestHostOnly();
 
         try {
@@ -280,6 +279,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         MfaViewType|string $type
     ): string {
         $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $serializer = $webauthn->getSerializer();
 
         $authenticatorSelectionCriteria = new AuthenticatorSelectionCriteria(
             $this->authenticatorAttachment,
@@ -288,7 +288,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
         $userEntity = $this->createUserEntity($propertyManager);
 
-        $credentialRecordRepository = new CredentialRecordRepository($propertyManager);
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager, $serializer);
         $credentialSources = $credentialRecordRepository->findAllForUserEntity($userEntity);
         // Convert the Credential Sources into Public Key Credential Descriptors
         $excludeCredentials = array_map(
@@ -303,7 +303,6 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             $authenticatorSelectionCriteria
         );
 
-        $serializer = $this->createSerializer();
         $properties = [
             'creationOptions' => $serializer->normalize($creationOptions),
             'userEntity' => $serializer->normalize($userEntity),
@@ -345,13 +344,16 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
     private function prepareAuth(ServerRequestInterface $request, MfaProviderPropertyManager $propertyManager): string
     {
-        $userEntity = $this->createSerializer()->denormalize(
+        $webauthn = $this->createWebauthnServer($request, $propertyManager);
+        $serializer = $webauthn->getSerializer();
+
+        $userEntity = $serializer->denormalize(
             $propertyManager->getProperty('userEntity'),
             PublicKeyCredentialUserEntity::class
         );
         $keys = $propertyManager->getProperty(CredentialRecordRepository::PROPERTY);
 
-        $credentialRecordRepository = new CredentialRecordRepository($propertyManager);
+        $credentialRecordRepository = new CredentialRecordRepository($propertyManager, $serializer);
         $credentialSources = $credentialRecordRepository->findAllForUserEntity($userEntity);
 
         // Convert the Credential Sources into Public Key Credential Descriptors
@@ -360,8 +362,6 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
             $credentialSources
         );
 
-        $webauthn = $this->createWebauthnServer($request, $propertyManager);
-
         // We generate the set of options.
         $publicKeyCredentialRequestOptions = $webauthn->generatePublicKeyCredentialRequestOptions(
             $this->userVerification,
@@ -369,7 +369,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         );
 
         $propertyManager->updateProperties([
-            'lastRequest' => $this->createSerializer()->normalize($publicKeyCredentialRequestOptions),
+            'lastRequest' => $serializer->normalize($publicKeyCredentialRequestOptions),
         ]);
 
         // @todo: Detect FE
@@ -377,7 +377,7 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $pageRenderer->loadJavaScriptModule('@bnf/mfa-webauthn/mfa-web-authn.js');
 
         return $this->renderHtmlTag('mfa-webauthn-authenticator', [
-            'credential-request-options' => $this->createSerializer()->normalize($publicKeyCredentialRequestOptions),
+            'credential-request-options' => $serializer->normalize($publicKeyCredentialRequestOptions),
             'locked' => $this->isLocked($propertyManager),
         ]);
     }
@@ -415,18 +415,6 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         return new PublicKeyCredentialUserEntity($userName, $uniqueid, $displayName);
     }
 
-    private function createSerializer(): SerializerInterface&NormalizerInterface&DenormalizerInterface
-    {
-        $serializer = (new WebauthnSerializerFactory(new AttestationStatementSupportManager()))->create();
-        if (!$serializer instanceof NormalizerInterface ||
-            !$serializer instanceof DenormalizerInterface
-        ) {
-            throw new \RuntimeException('Expected WebauthnSerializerFactory to create a (de)normalizing serializer', 1777882044);
-        }
-
-        return $serializer;
-    }
-
     private function createWebauthnServer(
         ServerRequestInterface $request,
         MfaProviderPropertyManager $propertyManager
@@ -436,8 +424,11 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
 
         $server = new Server(
             new PublicKeyCredentialRpEntity($name, $id),
-            new CredentialRecordRepository($propertyManager)
         );
+        $serializer = $server->getSerializer();
+        $repository = new CredentialRecordRepository($propertyManager, $serializer);
+        $server->setCredentialRecordRepository($repository);
+
         if ($this->logger !== null) {
             $server->setLogger($this->logger);
         }
