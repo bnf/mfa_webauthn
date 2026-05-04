@@ -442,22 +442,20 @@ class WebAuthnProvider implements MfaProviderInterface, LoggerAwareInterface
         $name = 'TYPO3 Backend';
         $id = $this->getNormalizedParams($request)->getRequestHostOnly();
 
+        $allowedOrigins = [];
+        if (preg_match('/^(.+\.)?localhost$/', $id)) {
+            // Marks 'localhost' and *.localhost as secure
+            $allowedOrigins = ['localhost'];
+        }
+
         $server = new Server(
             new PublicKeyCredentialRpEntity($name, $id),
+            $allowedOrigins,
+            $this->logger,
         );
         $serializer = $server->getSerializer();
         $repository = new CredentialRecordRepository($propertyManager, $serializer);
         $server->setCredentialRecordRepository($repository);
-
-        if ($this->logger !== null) {
-            $server->setLogger($this->logger);
-        }
-
-        if (preg_match('/^(.+\.)?localhost$/', $id)) {
-            // Marks 'localhost' and *.localhost as secure
-            // relying party ID (helps for local testing
-            $server->setSecuredRelyingPartyId([$id]);
-        }
 
         return $server;
     }
