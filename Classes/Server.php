@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace Bnf\MfaWebauthn;
 
-use Bnf\MfaWebauthn\Repository\PublicKeyCredentialSourceRepository;
+use Bnf\MfaWebauthn\Repository\CredentialRecordRepository;
 use Cose\Algorithm\Algorithm;
 use Cose\Algorithm\ManagerFactory;
 use Cose\Algorithm\Signature\ECDSA;
@@ -42,7 +42,7 @@ use Webauthn\PublicKeyCredentialDescriptor;
 use Webauthn\PublicKeyCredentialParameters;
 use Webauthn\PublicKeyCredentialRequestOptions;
 use Webauthn\PublicKeyCredentialRpEntity;
-//use Webauthn\PublicKeyCredentialSource;
+//use Webauthn\CredentialRecord;
 use Webauthn\PublicKeyCredentialUserEntity;
 
 
@@ -69,9 +69,9 @@ class Server
     private $coseAlgorithmManagerFactory;
 
     /**
-     * @var PublicKeyCredentialSourceRepository
+     * @var CredentialRecordRepository
      */
-    private $publicKeyCredentialSourceRepository;
+    private $credentialRecordRepository;
 
     /**
      * @var ExtensionOutputCheckerHandler
@@ -93,7 +93,7 @@ class Server
      */
     private $securedRelyingPartyId = [];
 
-    public function __construct(PublicKeyCredentialRpEntity $relyingParty, PublicKeyCredentialSourceRepository $publicKeyCredentialSourceRepository)
+    public function __construct(PublicKeyCredentialRpEntity $relyingParty, CredentialRecordRepository $credentialRecordRepository)
     {
         $this->rpEntity = $relyingParty;
 
@@ -112,7 +112,7 @@ class Server
         $this->coseAlgorithmManagerFactory->add('Ed25519', new EdDSA\Ed25519());
 
         $this->selectedAlgorithms = ['RS256', 'RS512', 'PS256', 'PS512', 'ES256', 'ES512', 'Ed25519'];
-        $this->publicKeyCredentialSourceRepository = $publicKeyCredentialSourceRepository;
+        $this->credentialRecordRepository = $credentialRecordRepository;
         $this->extensionOutputCheckerHandler = new ExtensionOutputCheckerHandler();
     }
 
@@ -227,7 +227,7 @@ class Server
         $authenticatorResponse = $publicKeyCredential->response;
         $authenticatorResponse instanceof AuthenticatorAssertionResponse || throw new InvalidArgumentException('Not an authenticator assertion response');
 
-        $credentialSource = $this->publicKeyCredentialSourceRepository->findOneByCredentialId($publicKeyCredential->rawId);
+        $credentialSource = $this->credentialRecordRepository->findOneByCredentialId($publicKeyCredential->rawId);
         $credentialSource !== null || throw new InvalidArgumentException('Credential source not found');
 
         $ceremonyStepManagerFactory = $this->createCeremonyStepManagerFactory($attestationStatementSupportManager);
@@ -238,16 +238,16 @@ class Server
             $authenticatorAssertionResponseValidator->setLogger($this->logger);
         }
 
-        $updatedCredentialSource = $authenticatorAssertionResponseValidator->check(
+        $updatedCredentialRecord = $authenticatorAssertionResponseValidator->check(
             $credentialSource,
             $authenticatorResponse,
             $publicKeyCredentialRequestOptions,
             $hostname,
             $userEntity?->id,
         );
-        $this->publicKeyCredentialSourceRepository->saveCredentialSource($updatedCredentialSource);
+        $this->credentialRecordRepository->saveCredentialRecord($updatedCredentialRecord);
 
-        return $updatedCredentialSource;
+        return $updatedCredentialRecord;
     }
 
     public function setLogger(LoggerInterface $logger): void
