@@ -2,6 +2,7 @@
     "name": "bnf/mfa-webauthn",
     "description": "WebAuthn Provider for TYPO3 Multi Factor Authentication",
     "type": "typo3-cms-extension",
+    "version": "1.2.6",
     "license": "GPL-3.0-or-later",
     "authors": [
         {
@@ -11,7 +12,7 @@
     ],
     "require": {
         "php": "^8.2",
-        "typo3/cms-core": "^12.0 || ^13.0 || ^14.0",
+        "typo3/cms-core": "^12.0 || ^13.0 || ^14.0 || 15.0.x-dev",
         "web-auth/webauthn-lib": "^5.3"
     },
     "suggest": {
@@ -28,6 +29,11 @@
     },
     "extra": {
         "typo3/cms": {
+            "Package": {
+                "providesPackages": {
+                    "web-auth/webauthn-lib": ""
+                }
+            },
             "extension-key": "mfa_webauthn"
         }
     },
