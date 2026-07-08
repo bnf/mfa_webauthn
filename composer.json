@@ -2,7 +2,7 @@
     "name": "bnf/mfa-webauthn",
     "description": "WebAuthn Provider for TYPO3 Multi Factor Authentication",
     "type": "typo3-cms-extension",
-    "version": "1.2.6",
+    "version": "1.4.1",
     "license": "GPL-3.0-or-later",
     "authors": [
         {
